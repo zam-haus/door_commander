@@ -1,0 +1,45 @@
+# for updates and superuser setup, please use:
+# docker-compose run python migrate
+# docker-compose run
+
+version: "3.4"
+services:
+  mqtt:
+    image: eclipse-mosquitto
+
+  db:
+    image: postgres
+    environment:
+      - POSTGRES_USER=user
+      - POSTGRES_PASSWORD
+      - POSTGRES_DB=db
+    #restart: unless-stopped
+    volumes:
+      - door-commander-postgres:/var/lib/postgresql/data
+    #ports:
+    #  - "5432:5432"
+  python:
+    depends_on:
+      - db
+    environment:
+      - POSTGRES_PASSWORD=${POSTGRES_DJANGO_PASSWORD}
+      - POSTGRES_USER=${POSTGRES_DJANGO_USER}
+      - POSTGRES_DB=${POSTGRES_DJANGO_DB}
+    build:
+      context: ""
+      dockerfile: Dockerfile
+      target: python-web
+    volumes:
+      - "door-commander-python-data:/opt/wissenslandkarte.betreiberverein.de/data"
+  nginx:
+    build:
+      context: ""
+      dockerfile: Dockerfile
+      target: nginx
+    ports:
+      - "80:80"
+    depends_on:
+      - python
+volumes:
+  door-commander-python-data:
+  door-commander-postgres:

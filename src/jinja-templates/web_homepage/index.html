@@ -1,0 +1,32 @@
+{% extends "web_homepage/base.html" %}}
+{% block head %}
+    {{ super() }}
+    {# ... #}
+{% endblock %}
+{% block body %}
+    <div>
+    <a href="{{ url("login")}}">login</a>
+    <a href="{{ url("logout")}}">logout</a>
+    <a href="{{ url("password_change")}}">password_change</a>
+    <a href="{{ url("password_reset")}}">password_reset</a>
+    </div>
+    <hr>
+    <div><span>Logged in: </span><span>{{ request.user.is_authenticated }}</span></div>
+    {% if request.user.is_authenticated %}
+        <div><span>User: </span><span>{{ request.user }}</span></div>
+        <div><span>Display Name: </span><span>{{ request.user.display_name }}</span></div>
+        <div><span>Full Name: </span><span>{{ request.user.full_name }}</span></div>
+        <div><span>Last Password Change: </span><span>{{ request.user.password_last_changed }}</span></div>
+        <div><span>Permitted to open door: </span><span>{{ request.user.has_perm(PERMISSION_OPEN_DOOR) }}</span></div>
+    {% endif %}
+
+    {% if can_open_door %}
+    <hr>
+    <div>
+    <form action="{{ url("open") }}" method="post">
+        {{ csrf_input }}
+        <button type="submit">Open Door</button>
+    </form>
+    </div>
+    {% endif %}
+{% endblock %}

@@ -1,0 +1,25 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+django = "*"
+django-csp = "*"
+django-fontawesome-5 = "*"
+gunicorn = "*"
+jinja2 = "*"
+psycopg2-binary = "*"
+pymaybe = "*"
+django-ipware = "*"
+pylint = "*"
+paho-mqtt = "*"
+icecream = "*"
+pytest = "*"
+
+[dev-packages]
+selenium = "*"
+pylint = "*"
+
+[requires]
+python_version = "3.8"
