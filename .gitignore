@@ -131,3 +131,8 @@ dmypy.json
 # IDEs
 .idea/
 .vscode/
+
+
+# our own buildchain stuff
+/id_rsa*
+/secrets.env

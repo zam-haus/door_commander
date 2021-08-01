@@ -1,0 +1,16 @@
+# everyone can read everything, there are no secrets
+topic read #
+
+# Doors can write their own status and confirm receipt
+# Door usernames should be semantic-free, e.g. UUIDs
+pattern readwrite door/%u/status
+pattern readwrite door/%u/open/confirm
+
+# ================================
+# From here on only users -- "pattern" should not be used anymore, only "topic"
+
+
+# The controller can control (and fake) all doors.
+user controller
+topic readwrite door/+/#
+

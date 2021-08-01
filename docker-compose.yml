@@ -4,11 +4,86 @@
 
 version: "3.4"
 services:
+
+
+  opal-server:
+    image: authorizon/opal-server:0.1.11
+    # ports:
+    #  - 7002
+    environment:
+      # Only 1 to avoid requiring a broadcast server (currently: pgsql, redis, kafka)
+      # UVICORN_NUM_WORKERS: 1
+      OPAL_POLICY_REPO_URL: "git@github.com:phi1010/zam-door-opa-policy.git"
+      # The passed value must be the contents of the SSH key in one line (replace new-line with underscore, i.e: \n with _)
+      # OPAL_POLICY_REPO_CLONE_PATH:
+      OPAL_POLICY_REPO_MAIN_BRANCH: main
+      # OPAL_POLICY_REPO_MAIN_REMOTE: origin
+      OPAL_POLICY_REPO_POLLING_INTERVAL: 10
+      # OPAL_DATA_CONFIG_SOURCES:
+      #   # language=json
+      #   '{
+      #       "config": {
+      #         "entries": [
+      #           {
+      #             "url": "https://api.authorizon.com/v1/policy-config",
+      #             "topics": [
+      #               "policy_data"
+      #             ],
+      #             "config": {
+      #               "headers": {
+      #                 "Authorization": "Bearer FAKE-SECRET"
+      #               }
+      #             }
+      #           }
+      #         ]
+      #       }
+      #     }'
+      OPAL_AUTH_PRIVATE_KEY:
+      OPAL_AUTH_PUBLIC_KEY:
+      OPAL_POLICY_REPO_SSH_KEY: "${OPAL_GIT_PRIVATE_KEY}"
+      OPAL_AUTH_MASTER_TOKEN:
+      # there are no https certificates, thus the security against attacks from other containers is weak.
+    volumes:
+      - "./opa/policy:/mnt/policy/:ro"
+    networks:
+      - opal
+
+
+  opa-sidecar:
+    depends_on:
+      - opal-server
+    image: authorizon/opal-client:0.1.11
+    ports:
+      - "7000:7000" # OPAL client healthcheck # TODO VULN disable
+      # here one can query http://localhost:8181/v1/data/app/door_commander/physical_access/allow
+      # WARNING: EVERYONE WHO CAN ACCESS THIS PORT CAN CHANGE ACCESS POLICIES AND DATA
+      - "8181:8181" # OPA # TODO VULN disable
+    environment:
+      OPAL_CLIENT_TOKEN: "${OPAL_AUTH_CLIENT_TOKEN}"
+      OPAL_SERVER_URL: http://opal-server:7002
+    networks:
+      - opal
+      - opa
+
+
   mqtt:
     image: eclipse-mosquitto
+    volumes:
+      - door-commander-mosquitto-log:/mosquitto/log
+      - door-commander-mosquitto-data:/mosquitto/data
+      - ./mosquitto/config/mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
+      - ./mosquitto/config/mosquitto.acl:/mosquitto/config/mosquitto.acl:ro
+      - ./mosquitto/config/mosquitto.passwd:/mosquitto/config/mosquitto.passwd
+
 
   db:
-    image: postgres
+    #image: postgres
+    build:
+      context: ./postgres
+      dockerfile: postgres.dockerfile
+      args:
+        POSTGRES_VERSION: 13
+        #POSTGRES_VERSION: latest
     environment:
       - POSTGRES_USER=user
       - POSTGRES_PASSWORD
@@ -18,28 +93,47 @@ services:
       - door-commander-postgres:/var/lib/postgresql/data
     #ports:
     #  - "5432:5432"
+
+
   python:
     depends_on:
       - db
     environment:
-      - POSTGRES_PASSWORD=${POSTGRES_DJANGO_PASSWORD}
-      - POSTGRES_USER=${POSTGRES_DJANGO_USER}
-      - POSTGRES_DB=${POSTGRES_DJANGO_DB}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD_DJANGO}
+      - POSTGRES_USER=${POSTGRES_USER_DJANGO}
+      - POSTGRES_DB=${POSTGRES_DB_DJANGO}
     build:
       context: ""
       dockerfile: Dockerfile
       target: python-web
+      args:
+        PYTHON_VERSION: 3.8-alpine
     volumes:
       - "door-commander-python-data:/opt/wissenslandkarte.betreiberverein.de/data"
+    networks:
+      - opa
+
+
   nginx:
     build:
       context: ""
       dockerfile: Dockerfile
       target: nginx
+      args:
+        PYTHON_VERSION: 3.8-alpine
+        NGINX_VERSION: 1-alpine
     ports:
       - "80:80"
     depends_on:
       - python
+
+
+networks:
+  opa:
+  opal:
+
 volumes:
   door-commander-python-data:
   door-commander-postgres:
+  door-commander-mosquitto-data:
+  door-commander-mosquitto-log:

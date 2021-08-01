@@ -1,4 +1,6 @@
-FROM python:3.8-alpine AS python-dependencies
+ARG PYTHON_VERSION=latest
+ARG NGINX_VERSION=latest
+FROM python:${PYTHON_VERSION} AS python-dependencies
 
 RUN apk add --no-cache openssl
 ENV DOCKERIZE_VERSION v0.6.1
@@ -43,7 +45,7 @@ WORKDIR /opt/static.door-commander.betreiberverein.de/
 
 
 
-FROM nginx:1-alpine as nginx
+FROM nginx:${NGINX_VERSION} as nginx
 RUN rm /etc/nginx/conf.d/default.conf
 # Assert there is no other site configured, e.g. after a base image update
 RUN test -n "$(find /etc/nginx/conf.d/ -empty -maxdepth 0)"
