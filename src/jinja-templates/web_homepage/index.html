@@ -4,29 +4,50 @@
     {# ... #}
 {% endblock %}
 {% block body %}
+    <h2>Navigation:</h2>
     <div>
-    <a href="{{ url("login")}}">login</a>
-    <a href="{{ url("logout")}}">logout</a>
-    <a href="{{ url("password_change")}}">password_change</a>
-    <a href="{{ url("password_reset")}}">password_reset</a>
+        <a href="{{ url("login") }}">login</a>
+        <a href="{{ url("logout") }}">logout</a>
+        <a href="{{ url("password_change") }}">password_change</a>
+        <a href="{{ url("password_reset") }}">password_reset</a>
+        <a href="{{ url("admin:index") }}">admin</a>
     </div>
     <hr>
+    <h2>Doors' status:</h2>
+    <ul>
+        {% for (display_name, status) in doors_status %}
+            <li>
+            <b>Door <i>{{ display_name }}</i>:</b>
+            {{ "Unknown" if status is none }}
+            {{ "Open" if status == True }}
+            {{ "Closed" if status == False }}
+            </li>
+        {% endfor %}
+    </ul>
+    <hr>
+    <h2>Your data:</h2>
     <div><span>Logged in: </span><span>{{ request.user.is_authenticated }}</span></div>
     {% if request.user.is_authenticated %}
         <div><span>User: </span><span>{{ request.user }}</span></div>
         <div><span>Display Name: </span><span>{{ request.user.display_name }}</span></div>
         <div><span>Full Name: </span><span>{{ request.user.full_name }}</span></div>
         <div><span>Last Password Change: </span><span>{{ request.user.password_last_changed }}</span></div>
-        <div><span>Permitted to open door: </span><span>{{ request.user.has_perm(PERMISSION_OPEN_DOOR) }}</span></div>
+        <div>
+            <span>Permitted to open door (generally): </span><span>{{ request.user.has_perm(PERMISSION_OPEN_DOOR) }}</span>
+        </div>
+        <div><span>Permitted to open door (effectively): </span><span>{{ can_open_door }}</span></div>
     {% endif %}
 
-    {% if can_open_door %}
     <hr>
-    <div>
-    <form action="{{ url("open") }}" method="post">
-        {{ csrf_input }}
-        <button type="submit">Open Door</button>
-    </form>
-    </div>
+    <h2>Your actions:</h2>
+    {% if can_open_door %}
+        <div>
+            {% for (door_id, display_name) in doors.items() %}
+                <form action="{{ url("open", kwargs=dict(door_id=door_id)) }}" method="post">
+                    {{ csrf_input }}
+                    <button type="submit">Open {{ display_name }}</button>
+                </form>
+            {% endfor %}
+        </div>
     {% endif %}
 {% endblock %}

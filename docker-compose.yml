@@ -7,6 +7,7 @@ services:
 
 
   opal-server:
+    entrypoint: [ "echo", "Service disabled" ]
     image: authorizon/opal-server:0.1.11
     # ports:
     #  - 7002
@@ -50,14 +51,15 @@ services:
 
 
   opa-sidecar:
+    entrypoint: [ "echo", "Service disabled" ]
     depends_on:
       - opal-server
     image: authorizon/opal-client:0.1.11
     ports:
-      - "7000:7000" # OPAL client healthcheck # TODO VULN disable
+      - "127.0.0.1:7000:7000" # OPAL client healthcheck # TODO VULN disable
       # here one can query http://localhost:8181/v1/data/app/door_commander/physical_access/allow
       # WARNING: EVERYONE WHO CAN ACCESS THIS PORT CAN CHANGE ACCESS POLICIES AND DATA
-      - "8181:8181" # OPA # TODO VULN disable
+      - "127.0.0.1:8181:8181" # OPA # TODO VULN disable
     environment:
       OPAL_CLIENT_TOKEN: "${OPAL_AUTH_CLIENT_TOKEN}"
       OPAL_SERVER_URL: http://opal-server:7002
@@ -74,7 +76,11 @@ services:
       - ./mosquitto/config/mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
       - ./mosquitto/config/mosquitto.acl:/mosquitto/config/mosquitto.acl:ro
       - ./mosquitto/config/mosquitto.passwd:/mosquitto/config/mosquitto.passwd
-
+    networks:
+      - mqtt
+    ports:
+      - "127.0.0.1:1883:1883" # TODO disable
+      - "127.0.0.1:1880:80" # TODO add TLS reverse proxy
 
   db:
     #image: postgres
@@ -92,16 +98,48 @@ services:
     volumes:
       - door-commander-postgres:/var/lib/postgresql/data
     #ports:
-    #  - "5432:5432"
+    #  - "127.0.0.1:5432:5432"
+    networks:
+      - db
 
 
   python:
     depends_on:
       - db
     environment:
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD_DJANGO}
-      - POSTGRES_USER=${POSTGRES_USER_DJANGO}
-      - POSTGRES_DB=${POSTGRES_DB_DJANGO}
+      POSTGRES_PASSWORD: '${POSTGRES_PASSWORD_DJANGO}'
+      POSTGRES_USER: '${POSTGRES_USER_DJANGO}'
+      POSTGRES_DB: '${POSTGRES_DB_DJANGO}'
+      MQTT_PASSWD_CONTROLLER:
+      MQTT_CONFIG: '{"host":"mqtt", "port":1338, "keepalive":10}'
+      DJANGO_LOGGING:
+        # language=json
+        '
+        {
+          "version": 1,
+          "disable_existing_loggers": false,
+          "handlers": {
+            "console": {
+              "class": "logging.StreamHandler"
+            }
+          },
+          "root": {
+            "handlers": [
+              "console"
+            ],
+            "level": "DEBUG"
+          },
+          "loggers": {
+            "django": {
+              "handlers": [
+                "console"
+              ],
+              "level": "INFO",
+              "propagate": false
+            }
+          }
+        }
+        '
     build:
       context: ""
       dockerfile: Dockerfile
@@ -112,6 +150,11 @@ services:
       - "door-commander-python-data:/opt/wissenslandkarte.betreiberverein.de/data"
     networks:
       - opa
+      - db
+      - web
+      - mqtt
+    ports:
+      - "127.0.0.1:8000:8000"
 
 
   nginx:
@@ -123,14 +166,19 @@ services:
         PYTHON_VERSION: 3.8-alpine
         NGINX_VERSION: 1-alpine
     ports:
-      - "80:80"
+      - "127.0.0.1:80:80"
     depends_on:
       - python
+    networks:
+      - web
 
 
 networks:
-  opa:
-  opal:
+  opa: # OPA / OPAL-Client <--> django
+  opal: # OPAL Server <--> OPAL Client
+  mqtt: # mosquitto <--> django
+  db: # psql <--> django
+  web: # nginx <--> django
 
 volumes:
   door-commander-python-data:

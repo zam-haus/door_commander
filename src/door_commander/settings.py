@@ -17,6 +17,33 @@ import pickle
 import os
 import json
 
+from icecream import ic
+
+_DJANGO_LOGGING = os.getenv("DJANGO_LOGGING")
+LOGGING = json.loads(_DJANGO_LOGGING) if _DJANGO_LOGGING else {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+        },
+    },
+    'root': {
+        'handlers': ['console'],
+        'level': 'DEBUG',
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['console'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+    },
+}
+
+
+
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 from paho.mqtt.client import MQTTv5
 
@@ -178,22 +205,33 @@ STATIC_ROOT = os.getenv("COLLECTSTATIC_DIR", None)
 
 LOGIN_REDIRECT_URL = "/"
 
+# TODO might be a vuln in some networks
 PROXY_HOSTNAME = "nginx"
 try:
-    _nginx_address = socket.gethostbyname_ex(PROXY_HOSTNAME)
+    _,_,_nginx_address = socket.gethostbyname_ex(PROXY_HOSTNAME)
 except socket.gaierror:
     _nginx_address = None
 
+# TODO library is broken ~phi1010
 if _nginx_address:
-    IPWARE_KWARGS = dict(request_header_order=['X_FORWARDED_FOR'], proxy_trusted_ips=[*_nginx_address])
+    IPWARE_KWARGS = dict(request_header_order=['X_FORWARDED_FOR', 'HTTP_X_FORWARDED_FOR', 'REMOTE_ADDR',], proxy_trusted_ips=[*_nginx_address])
 else:
     IPWARE_KWARGS = dict(proxy_trusted_ips=[], proxy_count=0)
 
-
 PERMITTED_IP_NETWORKS = [ipaddress.ip_network('192.168.0.0/24')]
 
-#https://www.eclipse.org/paho/index.php?page=clients/python/docs/index.php#connect-reconnect-disconnect
-MQTT_CLIENT_KWARGS = dict(client_id="door_commander", transport="tcp")
-MQTT_SERVER_KWARGS = dict(host="127.0.0.1", port=1883, keepalive=10)
-MQTT_PASSWORD_AUTH = None # dict(username=...,password=...)
+# https://www.eclipse.org/paho/index.php?page=clients/python/docs/index.php#connect-reconnect-disconnect
+# MQTT_CLIENT_KWARGS = dict(client_id="door_commander", transport="tcp")
+MQTT_CLIENT_KWARGS = dict(transport="tcp")
+MQTT_PASSWD_CONTROLLER = os.getenv("MQTT_PASSWD_CONTROLLER")
+MQTT_SERVER_KWARGS = os.getenv("MQTT_CONNECTION")
+if MQTT_SERVER_KWARGS is None:
+    MQTT_SERVER_KWARGS = dict(host="127.0.0.1", port=1883, keepalive=10)
+else:
+    MQTT_SERVER_KWARGS = json.loads(MQTT_SERVER_KWARGS)
+if MQTT_PASSWD_CONTROLLER:
+    MQTT_PASSWORD_AUTH = dict(username="controller", password=MQTT_PASSWD_CONTROLLER)
+else:
+    MQTT_PASSWORD_AUTH = None  # dict(username=...,password=...)
+
 MQTT_TLS = False

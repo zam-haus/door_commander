@@ -16,10 +16,11 @@ pylint = "*"
 paho-mqtt = "*"
 icecream = "*"
 pytest = "*"
+uuid = "*"
 
 [dev-packages]
 selenium = "*"
 pylint = "*"
 
 [requires]
-python_version = "3.8"
+python_version = "3"
