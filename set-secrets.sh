@@ -21,15 +21,16 @@ generate_password() { head -c32 /dev/random | base64; }
 MQTT_PASSWD_CONTROLLER="$(generate_password)"
 export MQTT_PASSWD_CONTROLLER
 declare -p MQTT_PASSWD_CONTROLLER >>secrets.env
+touch mosquitto/config/mosquitto.passwd  # otherwise a directory will be created
 docker-compose run mqtt mosquitto_passwd -b /mosquitto/config/mosquitto.passwd controller "$MQTT_PASSWD_CONTROLLER"
 
 
 
 
 
-POSTGRES_PASSWORD_SUPERUSER="$(generate_password)"
+POSTGRES_PASSWORD="$(generate_password)"
 # no export, nobody needs this.
-declare -p POSTGRES_PASSWORD_SUPERUSER >>secrets.env
+declare -p POSTGRES_PASSWORD >>secrets.env
 docker-compose run db /docker-postgres-run-command.sh /update_superuser.sh
 
 POSTGRES_PASSWORD_DJANGO="$(generate_password)"
