@@ -147,7 +147,7 @@ services:
       args:
         PYTHON_VERSION: 3.8-alpine
     volumes:
-      - "door-commander-python-data:/opt/wissenslandkarte.betreiberverein.de/data"
+      - "door-commander-python-data:/opt/door-commander.betreiberverein.de/data"
     networks:
       - opa
       - db
