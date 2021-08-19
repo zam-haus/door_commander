@@ -31,6 +31,8 @@ docker-compose run mqtt mosquitto_passwd -b /mosquitto/config/mosquitto.passwd c
 POSTGRES_PASSWORD="$(generate_password)"
 # no export, nobody needs this.
 declare -p POSTGRES_PASSWORD >>secrets.env
+# now we export this to set it in the container
+export POSTGRES_PASSWORD
 docker-compose run db /docker-postgres-run-command.sh /update_superuser.sh
 
 POSTGRES_PASSWORD_DJANGO="$(generate_password)"
