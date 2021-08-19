@@ -21,8 +21,9 @@ generate_password() { head -c32 /dev/random | base64; }
 MQTT_PASSWD_CONTROLLER="$(generate_password)"
 export MQTT_PASSWD_CONTROLLER
 declare -p MQTT_PASSWD_CONTROLLER >>secrets.env
+rm -f mosquitto/config/mosquitto.passwd
 touch mosquitto/config/mosquitto.passwd  # otherwise a directory will be created
-docker-compose run mqtt mosquitto_passwd -b /mosquitto/config/mosquitto.passwd controller "$MQTT_PASSWD_CONTROLLER"
+docker-compose run --rm mqtt mosquitto_passwd -b /mosquitto/config/mosquitto.passwd controller "$MQTT_PASSWD_CONTROLLER"
 
 
 
@@ -33,13 +34,13 @@ POSTGRES_PASSWORD="$(generate_password)"
 declare -p POSTGRES_PASSWORD >>secrets.env
 # now we export this to set it in the container
 export POSTGRES_PASSWORD
-docker-compose run db /docker-postgres-run-command.sh /update_superuser.sh
+docker-compose run --rm db /docker-postgres-run-command.sh /update_superuser.sh
 
 POSTGRES_PASSWORD_DJANGO="$(generate_password)"
 export POSTGRES_PASSWORD_DJANGO
 declare -p POSTGRES_PASSWORD_DJANGO >>secrets.env
 USER="${POSTGRES_USER_DJANGO}" PASSWORD="${POSTGRES_PASSWORD_DJANGO}" DB="${POSTGRES_DB_DJANGO}" \
-  docker-compose run \
+  docker-compose run --rm \
   -e USER -e PASSWORD -e DB \
   db /docker-postgres-run-command.sh /update_other_user.sh
 
@@ -73,7 +74,7 @@ declare -p OPAL_AUTH_MASTER_TOKEN >>secrets.env
 # the -T disables docker-compose from allocating a TTY, which is necessary if we don't want a \r from CRLF line endings.
 # use --no-just-the-token to get an error message if the python code fails with when trying to find data['token']
 OPAL_AUTH_CLIENT_TOKEN="$(
-  docker-compose run -T opa-sidecar \
+  docker-compose run --rm -T opa-sidecar \
     opal-client obtain-token "$OPAL_AUTH_MASTER_TOKEN" \
     --server-url=http://opal-server:7002 --type client
   #--no-just-the-token \
