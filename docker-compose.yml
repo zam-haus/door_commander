@@ -9,7 +9,7 @@ services:
   opal-server:
     entrypoint: [ "echo", "Service disabled" ]
     image: authorizon/opal-server:0.1.11
-    # ports:
+    ports: []
     #  - 7002
     environment:
       # Only 1 to avoid requiring a broadcast server (currently: pgsql, redis, kafka)
@@ -55,11 +55,11 @@ services:
     depends_on:
       - opal-server
     image: authorizon/opal-client:0.1.11
-    ports:
-      - "127.0.0.1:7000:7000" # OPAL client healthcheck # TODO VULN disable
+    ports: []
+      # - "127.0.0.1:7000:7000" # OPAL client healthcheck # TODO VULN disable
       # here one can query http://localhost:8181/v1/data/app/door_commander/physical_access/allow
       # WARNING: EVERYONE WHO CAN ACCESS THIS PORT CAN CHANGE ACCESS POLICIES AND DATA
-      - "127.0.0.1:8181:8181" # OPA # TODO VULN disable
+      # - "127.0.0.1:8181:8181" # OPA # TODO VULN disable
     environment:
       OPAL_CLIENT_TOKEN: "${OPAL_AUTH_CLIENT_TOKEN}"
       OPAL_SERVER_URL: http://opal-server:7002
@@ -153,8 +153,8 @@ services:
       - db
       - web
       - mqtt
-    ports:
-      - "127.0.0.1:8000:8000"
+    ports: []
+      # - "127.0.0.1:8000:8000"
 
 
   nginx:
