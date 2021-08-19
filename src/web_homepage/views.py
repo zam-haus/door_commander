@@ -63,7 +63,7 @@ def check_can_open_door(request):
     has_permission = request.user.has_perm(PERMISSION_OPEN_DOOR)
     has_allowed_location = check_has_allowed_location(request)
     is_allowed = is_authenticated and has_permission  # and has_allowed_location
-    log.debug(ic.format(is_authenticated, has_permission, has_allowed_location, is_allowed))
+    log.debug(ic.format(request.user, is_authenticated, has_permission, has_allowed_location, is_allowed))
     return is_allowed
 
 
