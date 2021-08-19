@@ -111,7 +111,7 @@ services:
       POSTGRES_USER: '${POSTGRES_USER_DJANGO}'
       POSTGRES_DB: '${POSTGRES_DB_DJANGO}'
       MQTT_PASSWD_CONTROLLER:
-      MQTT_CONFIG: '{"host":"mqtt", "port":1883, "keepalive":10}'
+      MQTT_CONNECTION: '{"host":"mqtt", "port":1883, "keepalive":10}'
       DJANGO_LOGGING:
         # language=json
         '
