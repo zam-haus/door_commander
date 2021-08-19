@@ -8,3 +8,6 @@
 8. Open the application home page
 9. Click the button
 10. Watch the listener receiving the mqtt message
+11. You can update a door's status with the following command (fill in your door's mqtt id)
+
+    ```(. secrets.env ; mosquitto_pub -h localhost -u controller -P "${MQTT_PASSWD_CONTROLLER}" -p 1883 -d -t 'door/f16f33d2-7d87-45d3-937d-f5d64d957e8f/presence' -m 'true')```
