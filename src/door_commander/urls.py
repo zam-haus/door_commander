@@ -21,7 +21,7 @@ from django.contrib.auth.views import auth_login, LoginView
 
 urlpatterns = [
     path('', include('web_homepage.urls')),
-    path('admin/', admin.site.urls),
+    #path('admin/', admin.site.urls),
     url(
         r'^accounts/login/$',
         LoginView.as_view(
@@ -31,5 +31,7 @@ urlpatterns = [
               'site_title': 'ZAM Door',
               'site_header': 'ZAM Door Commander Login'}),
         name='login'),
+
     path('accounts/', include('django.contrib.auth.urls')),
+    path('oidc/', include('mozilla_django_oidc.urls')),
 ]

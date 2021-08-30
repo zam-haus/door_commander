@@ -23,9 +23,19 @@ _DJANGO_LOGGING = os.getenv("DJANGO_LOGGING")
 LOGGING = json.loads(_DJANGO_LOGGING) if _DJANGO_LOGGING else {
     'version': 1,
     'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '%(levelname)s %(asctime)s %(name)s %(process)d %(thread)d %(message)s'
+        },
+        'simple': {
+            'format': '%(levelname)s %(message)s'
+        },
+    },
+
     'handlers': {
         'console': {
             'class': 'logging.StreamHandler',
+            'formatter': 'verbose'
         },
     },
     'root': {
@@ -38,11 +48,14 @@ LOGGING = json.loads(_DJANGO_LOGGING) if _DJANGO_LOGGING else {
             'level': 'INFO',
             'propagate': False,
         },
+        'decorated_paho_mqtt.mqtt_framework': {
+            'handlers': ['console'],
+            # paho seems to log everything, including connection errors at level 16, which is between DEBUG and INFO
+            'level': 'INFO',
+            'propagate': False,
+        }
     },
 }
-
-
-
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 from paho.mqtt.client import MQTTv5
@@ -94,9 +107,14 @@ INSTALLED_APPS = [
     'django.contrib.sessions',  # https://docs.djangoproject.com/en/3.2/topics/http/sessions/
     'django.contrib.messages',  # https://docs.djangoproject.com/en/3.2/ref/contrib/messages/
     'django.contrib.staticfiles',  # https://docs.djangoproject.com/en/3.2/ref/contrib/staticfiles/
+    'mozilla_django_oidc',  # Load after auth
     'web_homepage',
     'accounts',
 ]
+if DEBUG:
+    INSTALLED_APPS += [
+        'django_extensions',
+    ]
 
 MIDDLEWARE = [
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -106,6 +124,8 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'django.middleware.security.SecurityMiddleware',
+    # this might make API requests a bit more difficult
+    'mozilla_django_oidc.middleware.SessionRefresh',
 ]
 
 ROOT_URLCONF = 'door_commander.urls'
@@ -208,13 +228,14 @@ LOGIN_REDIRECT_URL = "/"
 # TODO might be a vuln in some networks
 PROXY_HOSTNAME = "nginx"
 try:
-    _,_,_nginx_address = socket.gethostbyname_ex(PROXY_HOSTNAME)
+    _, _, _nginx_address = socket.gethostbyname_ex(PROXY_HOSTNAME)
 except socket.gaierror:
     _nginx_address = None
 
 # TODO library is broken ~phi1010
 if _nginx_address:
-    IPWARE_KWARGS = dict(request_header_order=['X_FORWARDED_FOR', 'HTTP_X_FORWARDED_FOR', 'REMOTE_ADDR',], proxy_trusted_ips=[*_nginx_address])
+    IPWARE_KWARGS = dict(request_header_order=['X_FORWARDED_FOR', 'HTTP_X_FORWARDED_FOR', 'REMOTE_ADDR', ],
+                         proxy_trusted_ips=[*_nginx_address])
 else:
     IPWARE_KWARGS = dict(proxy_trusted_ips=[], proxy_count=0)
 
@@ -235,3 +256,25 @@ else:
     MQTT_PASSWORD_AUTH = None  # dict(username=...,password=...)
 
 MQTT_TLS = False
+
+OIDC_OP_JWKS_ENDPOINT = "https://sso.erlangen.ccc.de/auth/realms/ZAM/protocol/openid-connect/certs"
+
+# Add 'mozilla_django_oidc' authentication backend
+AUTHENTICATION_BACKENDS = (
+    'django.contrib.auth.backends.ModelBackend',
+    #    'mozilla_django_oidc.auth.OIDCAuthenticationBackend',
+    'door_commander.auth.CustomOidcAuthenticationBackend',
+)
+
+#ic(dict(os.environ))
+OIDC_RP_CLIENT_ID = os.environ['OIDC_RP_CLIENT_ID']
+OIDC_RP_CLIENT_SECRET = os.environ['OIDC_RP_CLIENT_SECRET']
+OIDC_RENEW_ID_TOKEN_EXPIRY_SECONDS = 60 * 15
+OIDC_OP_AUTHORIZATION_ENDPOINT = os.environ['OIDC_OP_AUTHORIZATION_ENDPOINT']
+OIDC_OP_TOKEN_ENDPOINT = os.environ['OIDC_OP_TOKEN_ENDPOINT']
+OIDC_OP_USER_ENDPOINT = os.environ['OIDC_OP_USER_ENDPOINT']
+OIDC_OP_LOGOUT_URL = os.environ['OIDC_OP_LOGOUT_URL']
+if OIDC_OP_LOGOUT_URL:
+    OIDC_OP_LOGOUT_URL_METHOD='door_commander.auth.provider_logout'
+OIDC_RP_SIGN_ALGO = "RS256"
+LOGOUT_REDIRECT_URL = "/"

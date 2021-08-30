@@ -80,10 +80,13 @@ OPAL_AUTH_CLIENT_TOKEN="$(
   #--no-just-the-token \
 )"
 export OPAL_AUTH_CLIENT_TOKEN
-declare -p OPAL_AUTH_CLIENT_TOKEN >>secrets.env
+declare -p OPAL_AUTH_CLIENT_TOKEN >> secrets.env
 
 
-
+echo "TODO: You need to provide OIDC_RP_CLIENT_SECRET manually."
+OIDC_RP_CLIENT_SECRET=""
+export OIDC_RP_CLIENT_SECRET
+declare -p OIDC_RP_CLIENT_SECRET >> secrets.env
 
 
 

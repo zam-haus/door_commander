@@ -17,6 +17,9 @@ paho-mqtt = "*"
 icecream = "*"
 pytest = "*"
 uuid = "*"
+mozilla-django-oidc = "*"
+django-extensions = "*"
+decorated-paho-mqtt = "*"
 
 [dev-packages]
 selenium = "*"

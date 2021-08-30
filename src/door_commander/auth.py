@@ -1,0 +1,115 @@
+import json
+from logging import getLogger
+
+from django.contrib.auth.models import Permission
+from django.db import transaction, IntegrityError
+from django.http import HttpRequest
+from django.template.defaultfilters import urlencode
+from django.template.defaulttags import url
+from mozilla_django_oidc.auth import OIDCAuthenticationBackend
+from icecream import ic
+
+from accounts.models import User, UserDirectory, UserConnection
+from door_commander import settings
+from web_homepage.models import PERMISSION_OPEN_DOOR, _PERMISSION_OPEN_DOOR
+from pymaybe import maybe
+
+log = getLogger(__name__)
+
+
+class CustomOidcAuthenticationBackend(OIDCAuthenticationBackend):
+    OIDC_USER_DIRECTORY_UUID = "3a01ea23-4a7f-4c64-adce-02411cd0a480"
+
+    def filter_users_by_claims(self, claims):
+        try:
+            # return super().filter_users_by_claims(claims)
+            ic(claims)
+            # return a user with the key from the token an the correct directory.
+            # the two constraints refer to a single directory,
+            #   see https://docs.djangoproject.com/en/3.2/topics/db/queries/#spanning-multi-valued-relationships
+            users = User.objects.filter(
+                connections__directory__id=CustomOidcAuthenticationBackend.OIDC_USER_DIRECTORY_UUID,
+                connections__directory_key=self.get_directory_key(claims), )
+            ic(list(users))
+            return users
+        except:
+            log.info("User not found, creating entry.")
+            return self.UserModel.objects.none()
+
+    def get_or_create_directory(self):
+        try:
+            dir, created = UserDirectory.objects.get_or_create(
+                id=CustomOidcAuthenticationBackend.OIDC_USER_DIRECTORY_UUID,
+                defaults=dict(
+                    name="oidc",
+                    description=f"""OpenID Connect Directory at {settings.OIDC_OP_AUTHORIZATION_ENDPOINT}"""
+                ))
+        except IntegrityError:
+            log.error(
+                "Could not create a user directory with name 'oidc'. Please rename already existing user directories")
+            raise
+        else:
+            if created:
+                log.info(f"Created user directory {repr(dir.name)}")
+            return dir
+
+    def create_user(self, claims):
+        dir = self.get_or_create_directory()
+        with transaction.atomic():
+            user = User()
+            user.email = claims.get("email")
+            if claims.get("email_verified") == False:
+                user.email = None
+            user.full_name = claims.get("name")
+            user.display_name = claims.get("preferred_username")
+            user.set_unusable_password()
+            user.username = claims.get("preferred_username")
+            user.save()
+
+            connection = UserConnection()
+            connection.user = user
+            connection.directory = dir
+            connection.directory_key = self.get_directory_key(claims)
+            connection.latest_directory_data = claims
+
+            connection.save()
+            self.update_permissions(claims, user)
+        return user
+
+        # super(CustomOidcAuthenticationBackend, self).create_user(claims)
+
+    def get_directory_key(self, claims):
+        return claims["ldap_id"]
+
+    def update_user(self, user, claims):
+        # super(CustomOidcAuthenticationBackend, self).update_user(user, claims)
+        connection = UserConnection.objects \
+            .filter(
+            user=user,
+            directory__id=CustomOidcAuthenticationBackend.OIDC_USER_DIRECTORY_UUID,
+            directory_key=self.get_directory_key(claims),
+        ).get()
+        connection.latest_directory_data = claims
+        connection.save()
+
+        self.update_permissions(claims, user)
+        return user
+
+    def update_permissions(self, claims, user):
+        claim_resource_access = maybe(claims) \
+            ["resource_access"]["sesam.zam.haus"] \
+            ["roles"].__contains__("MayOpenFrontDoor")
+        #ic([(p.name, p.codename) for p in Permission.objects.all()])
+        permission = Permission.objects.get(codename=_PERMISSION_OPEN_DOOR)
+        if claim_resource_access.or_else(False):
+            user.user_permissions.add(permission)
+        else:
+            user.user_permissions.remove(permission)
+        user.save()
+
+
+def provider_logout(request: HttpRequest):
+    keycloak_logout_url = settings.OIDC_OP_LOGOUT_URL
+    redirect_url = request.build_absolute_uri(settings.LOGOUT_REDIRECT_URL)
+    return_url = keycloak_logout_url.format(urlencode(redirect_url))
+    return return_url

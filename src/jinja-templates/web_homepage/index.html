@@ -7,20 +7,41 @@
     <h2>Navigation:</h2>
     <div>
         <a href="{{ url("login") }}">login</a>
-        <a href="{{ url("logout") }}">logout</a>
+
+        <a href="{{ url("logout") }}">logout (only from door_commander)</a>
         <a href="{{ url("password_change") }}">password_change</a>
         <a href="{{ url("password_reset") }}">password_reset</a>
         <a href="{{ url("admin:index") }}">admin</a>
+    </div>
+    <hr>
+    <h2> OIDC actions</h2>
+    <div>
+        {% if request.user.is_authenticated %}
+            <form action="{{ url('oidc_logout') }}" method="post">
+                {{ csrf_input }}
+                <input type="submit" value="logout (from door_commander and single sign on)">
+            </form>
+        {% else %}
+            <a href="{{ url('oidc_authentication_init') }}">Login</a>
+        {% endif %}
+        {% if request.user.connections %}
+            {% for c in request.user.connections.all() %}
+                <div><span>Is registered with Directory </span><span>{{ c.directory.name }}</span></div>
+                <div><span>With the following information </span><span><pre>{{ c.latest_directory_data }}</pre></span>
+                </div>
+                <div><span>With the following user id </span><span>{{ c.directory_key }}</span></div>
+            {% endfor %}
+        {% endif %}
     </div>
     <hr>
     <h2>Doors' status:</h2>
     <ul>
         {% for (display_name, status) in doors_status %}
             <li>
-            <b>Door <i>{{ display_name }}</i>:</b>
-            {{ "Unknown" if status is none }}
-            {{ "Open" if status == True }}
-            {{ "Closed" if status == False }}
+                <b>Door <i>{{ display_name }}</i>:</b>
+                {{ "Unknown" if status is none }}
+                {{ "Open" if status == True }}
+                {{ "Closed" if status == False }}
             </li>
         {% endfor %}
     </ul>
@@ -29,9 +50,11 @@
     <div><span>Logged in: </span><span>{{ request.user.is_authenticated }}</span></div>
     {% if request.user.is_authenticated %}
         <div><span>User: </span><span>{{ request.user }}</span></div>
+        <div><span>Email: </span><span>{{ request.user.email }}</span></div>
         <div><span>Display Name: </span><span>{{ request.user.display_name }}</span></div>
         <div><span>Full Name: </span><span>{{ request.user.full_name }}</span></div>
         <div><span>Last Password Change: </span><span>{{ request.user.password_last_changed }}</span></div>
+        <div><span>Can use and change password: </span><span>{{ request.user.has_usable_password() }}</span></div>
         <div>
             <span>Permitted to open door (generally): </span><span>{{ request.user.has_perm(PERMISSION_OPEN_DOOR) }}</span>
         </div>
