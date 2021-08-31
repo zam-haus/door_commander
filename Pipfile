@@ -24,6 +24,7 @@ decorated-paho-mqtt = "*"
 [dev-packages]
 selenium = "*"
 pylint = "*"
+rich = "*"
 
 [requires]
 python_version = "3"

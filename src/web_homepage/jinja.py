@@ -2,7 +2,7 @@ from django.templatetags.static import static
 from django.urls import reverse
 
 from jinja2 import Environment
-from door_commander.settings import DEBUG
+from django.conf import settings
 
 
 def environment(**options):
@@ -10,6 +10,7 @@ def environment(**options):
     env.globals.update({
         'static': static,
         'url': reverse,
-        'debug': DEBUG,
+        'debug': settings.DEBUG,
+        'oidc_active': settings.OIDC,
     })
     return env

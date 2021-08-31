@@ -14,6 +14,9 @@ from django.utils.translation import gettext_lazy as _
 class UserConnectionInline(admin.StackedInline):
     model = UserConnection
     extra = 0
+    can_add = False
+    fields=('directory', 'directory_key', 'latest_directory_data',),
+    readonly_fields = ('latest_directory_data',)
 
 
 class UserAdmin(BaseUserAdmin):

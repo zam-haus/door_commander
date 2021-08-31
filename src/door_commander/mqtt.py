@@ -19,6 +19,7 @@ class MqttDoorCommanderEndpoint(GenericMqttEndpoint):
         super().__init__(client_kwargs, password_auth, server_kwargs, tls)
 
         self.doors_presence = dict()
+        """This is indexed by mqtt id"""
 
     @property
     def is_connected(self):

@@ -10,7 +10,7 @@ from mozilla_django_oidc.auth import OIDCAuthenticationBackend
 from icecream import ic
 
 from accounts.models import User, UserDirectory, UserConnection
-from door_commander import settings
+from django.conf import settings
 from web_homepage.models import PERMISSION_OPEN_DOOR, _PERMISSION_OPEN_DOOR
 from pymaybe import maybe
 
@@ -23,14 +23,14 @@ class CustomOidcAuthenticationBackend(OIDCAuthenticationBackend):
     def filter_users_by_claims(self, claims):
         try:
             # return super().filter_users_by_claims(claims)
-            ic(claims)
+            log.debug(ic.format(claims))
             # return a user with the key from the token an the correct directory.
             # the two constraints refer to a single directory,
             #   see https://docs.djangoproject.com/en/3.2/topics/db/queries/#spanning-multi-valued-relationships
             users = User.objects.filter(
                 connections__directory__id=CustomOidcAuthenticationBackend.OIDC_USER_DIRECTORY_UUID,
                 connections__directory_key=self.get_directory_key(claims), )
-            ic(list(users))
+            log.debug(ic.format(list(users)))
             return users
         except:
             log.info("User not found, creating entry.")
