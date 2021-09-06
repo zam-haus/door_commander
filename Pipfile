@@ -20,11 +20,14 @@ uuid = "*"
 mozilla-django-oidc = "*"
 django-extensions = "*"
 decorated-paho-mqtt = "*"
+graphene-django = "*"
+celery = "*"
 
 [dev-packages]
 selenium = "*"
 pylint = "*"
 rich = "*"
+django-debug-toolbar = "*"
 
 [requires]
 python_version = "3"

@@ -18,6 +18,12 @@ import pickle
 import socket
 from pathlib import Path
 
+from celery.schedules import crontab
+
+import door_commander.celery_tasks
+
+# TODO this file becomes too long, use dynaconf or similar and split it up.
+
 from django.core.management.utils import get_random_secret_key
 from icecream import ic
 
@@ -100,9 +106,7 @@ SECRET_KEY_FILE = BASE_DIR.joinpath("./data/django-secret-key.json")
 
 
 def load_or_create_secret_key() -> str:
-    # TODO we might want to record hostname and time of the secret creation in this json, to allow us to recognize if
-    #  it becomes a constant during docker builds. Also, we might want to delete/recreate it explicitly during
-    #  first startup.
+    # TODO we now pass all secrets via environment, we might want to do this here too.
     if SECRET_KEY_FILE.exists():
         secret = json.load(open(SECRET_KEY_FILE, "r"))
         return secret
@@ -136,10 +140,6 @@ INSTALLED_APPS = [
     'django.contrib.messages',  # https://docs.djangoproject.com/en/3.2/ref/contrib/messages/
     'django.contrib.staticfiles',  # https://docs.djangoproject.com/en/3.2/ref/contrib/staticfiles/
 ]
-if DEBUG:
-    INSTALLED_APPS += [
-        'django_extensions',
-    ]
 
 MIDDLEWARE = [
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -150,6 +150,15 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'django.middleware.security.SecurityMiddleware',
 ]
+
+if DEBUG:
+    INSTALLED_APPS += [
+        'django_extensions',
+        'debug_toolbar',
+    ]
+    MIDDLEWARE += [
+        'debug_toolbar.middleware.DebugToolbarMiddleware',
+    ]
 
 # ================================================================
 # URLs
@@ -203,12 +212,13 @@ WSGI_APPLICATION = 'door_commander.wsgi.application'
 
 POSTGRES_DB = os.getenv("POSTGRES_DB")
 if not POSTGRES_DB:
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.sqlite3',
-            'NAME': BASE_DIR / 'data' / 'db.sqlite3',
+    if DEBUG:
+        DATABASES = {
+            'default': {
+                'ENGINE': 'django.db.backends.sqlite3',
+                'NAME': BASE_DIR / 'data' / 'db.sqlite3',
+            }
         }
-    }
 else:
     POSTGRES_PASSWORD = os.getenv("POSTGRES_PASSWORD")
     POSTGRES_USER = os.getenv("POSTGRES_USER")
@@ -352,6 +362,66 @@ if atomic_globals:
 else:
     OIDC = False
     log.warning("Did not load OpenID Connect configuration", exc_info=atomic_globals.exc_info)
+
+# ================================================================
+# GraphQL
+# ================================================================
+
+INSTALLED_APPS += [
+    # 'django.contrib.staticfiles', # Required for GraphiQL
+    'graphene_django',
+]
+
+# Check http://127.0.0.1:8000/graphql
+# You could query:
+"""{
+  users {
+    id
+    fullName
+    displayName
+    username
+    isSuperuser
+    dateJoined
+  }
+  _debug{
+    sql {
+      sql
+      transId
+      transStatus
+      isoLevel
+      encoding
+      vendor
+      duration
+      startTime
+      stopTime
+      isSlow
+      isSelect
+    }
+  }
+}
+"""
+
+GRAPHENE = {
+    'SCHEMA': 'api.gql.schema',  # Where your Graphene schema lives
+    'MIDDLEWARE': [
+        'graphene_django.debug.DjangoDebugMiddleware',
+        # this hides exception messages, except for explicit graphql exceptions:
+        'api.gql.SecurityMiddleware',
+    ] if DEBUG else [],
+}
+
+# ================================================================
+# Celery
+# ================================================================
+CELERY_BROKER_URL = "redis://redis:6379"
+CELERY_RESULT_BACKEND = "redis://redis:6379"
+
+CELERY_BEAT_SCHEDULE = {
+    "debug_task": {
+        "task": "door_commander.celery_tasks.debug_task",
+        "schedule": crontab(minute="*/1"),
+    },
+}
 
 # ================================================================
 # Our own functional apps

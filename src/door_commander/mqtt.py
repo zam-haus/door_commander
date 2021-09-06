@@ -4,6 +4,7 @@ from logging import getLogger
 from numbers import Number
 
 from decorated_paho_mqtt import GenericMqttEndpoint
+from django.conf import settings
 from icecream import ic
 from paho.mqtt.client import MQTTMessage
 from pymaybe import maybe
@@ -71,17 +72,4 @@ def start_connection():
     return door_commander_mqtt
 
 
-def publish_door_names():
-    for door in Door.objects.all():
-        publish_door_name(door)
-
-
-def publish_door_name(door):
-    log.info("publishing door names for door {}".format(door.id))
-    door_commander_mqtt.publish("door/+/display_name", door.mqtt_id, qos=2, retain=True,
-                                payload=json.dumps(door.display_name))
-
-
 door_commander_mqtt: MqttDoorCommanderEndpoint = start_connection()
-log.info("publishing door names on startup")
-publish_door_names()

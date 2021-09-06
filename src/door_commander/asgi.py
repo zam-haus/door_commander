@@ -15,4 +15,4 @@ os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'door_commander.settings')
 
 from . import assert_database_password, mqtt
 
-  application = get_asgi_application()
+application = get_asgi_application()

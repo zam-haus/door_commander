@@ -106,7 +106,9 @@ services:
   python:
     depends_on:
       - db
+      - redis
     environment:
+      &python-environment
       OIDC_RP_CLIENT_ID:
       OIDC_RP_CLIENT_SECRET:
       OIDC_OP_LOGOUT_URL:
@@ -147,6 +149,7 @@ services:
         }
         '
     build:
+      &python-build
       context: ""
       dockerfile: Dockerfile
       target: python-web
@@ -162,6 +165,16 @@ services:
     ports: []
       # - "127.0.0.1:8000:8000"
 
+  celery-beat:
+    build: *python-build
+    command: celery -A core beat -l info
+    volumes: []
+    environment: *python-environment
+    depends_on:
+      - redis
+      - db
+    networks:
+      - db
 
   nginx:
     build:
@@ -177,6 +190,23 @@ services:
       - python
     networks:
       - web
+
+  redis:
+    # this redis has no authentication.
+    # NEVER EXPOSE ITS PORTS
+    image: redis:alpine
+
+
+  celery:
+    command: celery -A core worker -l info
+    build: *python-build
+    volumes: []
+    environment: *python-environment
+    depends_on:
+      - redis
+      - db
+    networks:
+      - db
 
 
 networks:
