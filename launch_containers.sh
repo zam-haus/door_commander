@@ -5,6 +5,7 @@ COMPOSE="docker-compose -f docker-compose.yml"
 test -f secrets.env
 source secrets.env
 
+set -x
 $COMPOSE build --parallel
 # recreate the containers with the new password.
 $COMPOSE up --no-start --force-recreate

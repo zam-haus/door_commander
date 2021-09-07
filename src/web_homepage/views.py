@@ -1,27 +1,18 @@
-import http
 import ipaddress
-import json
 import logging
-import random
 import time
 
 from django.contrib.auth.decorators import login_required, permission_required
-from django.core.exceptions import ObjectDoesNotExist, PermissionDenied
-from django.shortcuts import redirect, render
-from django.http import HttpResponseNotFound
+from django.core.exceptions import PermissionDenied
 from django.shortcuts import render
 
-from django.http import HttpResponse
-from django.template.context_processors import request
 from django.views.decorators.http import require_POST
 from icecream import ic
-from paho.mqtt.client import Client
-from pymaybe import maybe
 from ipware import get_client_ip
 
-from door_commander.mqtt import MqttDoorCommanderEndpoint, door_commander_mqtt
+from doors.mqtt import door_commander_mqtt
 from django.conf import settings
-from web_homepage.models import Door, PERMISSION_OPEN_DOOR, PERMISSION_LOCATION_OVERRIDE
+from doors.models import PERMISSION_OPEN_DOOR, PERMISSION_LOCATION_OVERRIDE, Door
 
 log = logging.getLogger(__name__)
 log_ip = logging.getLogger(__name__ + ".ip")

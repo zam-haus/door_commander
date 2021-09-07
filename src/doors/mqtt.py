@@ -3,14 +3,15 @@ from json import loads
 from logging import getLogger
 from numbers import Number
 
-from decorated_paho_mqtt import GenericMqttEndpoint
+from decorated_paho_mqtt import GenericMqttEndpoint, pack_topic
 from django.conf import settings
+from django.utils.functional import lazy
 from icecream import ic
 from paho.mqtt.client import MQTTMessage
 from pymaybe import maybe
 
 from door_commander.settings import MQTT_CLIENT_KWARGS, MQTT_SERVER_KWARGS, MQTT_PASSWORD_AUTH, MQTT_TLS
-from web_homepage.models import Door
+from doors.models import Door
 
 log = getLogger(__name__)
 
@@ -60,6 +61,9 @@ class MqttDoorCommanderEndpoint(GenericMqttEndpoint):
         payload = dict(not_after=timeout)
         self.publish("door/+/open", mqtt_id, qos=2, retain=False, payload=json.dumps(payload))
 
+    def door_name(self, mqtt_id, name):
+        topic = pack_topic("door/+/display_name", mqtt_id)
+        return self._mqttc.publish(topic, json.dumps(name), qos=2,retain=True)
 
 def start_connection():
     door_commander_mqtt = MqttDoorCommanderEndpoint(
@@ -71,5 +75,4 @@ def start_connection():
     door_commander_mqtt.connect()
     return door_commander_mqtt
 
-
-door_commander_mqtt: MqttDoorCommanderEndpoint = start_connection()
+door_commander_mqtt: MqttDoorCommanderEndpoint = lazy(start_connection,MqttDoorCommanderEndpoint)()

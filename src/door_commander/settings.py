@@ -20,7 +20,7 @@ from pathlib import Path
 
 from celery.schedules import crontab
 
-import door_commander.celery_tasks
+import door_commander.tasks
 
 # TODO this file becomes too long, use dynaconf or similar and split it up.
 
@@ -352,7 +352,7 @@ if atomic_globals:
     ]
     AUTHENTICATION_BACKENDS += [
         #    'mozilla_django_oidc.auth.OIDCAuthenticationBackend',
-        'door_commander.auth.CustomOidcAuthenticationBackend',
+        'accounts.auth.CustomOidcAuthenticationBackend',
     ]
     MIDDLEWARE += [
         # this might make API requests a bit more difficult
@@ -417,9 +417,10 @@ CELERY_BROKER_URL = "redis://redis:6379"
 CELERY_RESULT_BACKEND = "redis://redis:6379"
 
 CELERY_BEAT_SCHEDULE = {
-    "debug_task": {
-        "task": "door_commander.celery_tasks.debug_task",
-        "schedule": crontab(minute="*/1"),
+    # "debug_task": {"task": "door_commander.tasks.debug_task", "schedule": crontab(minute="*/1"), },
+    "publish_door_names": {
+        "task": "doors.tasks.publish_door_names",
+        "schedule": crontab(minute="*/15"),
     },
 }
 
@@ -428,8 +429,11 @@ CELERY_BEAT_SCHEDULE = {
 # ================================================================
 
 INSTALLED_APPS += [
-    'web_homepage',
+    'doors',
     'accounts',
+    'api',
+    'web_homepage',
+
 ]
 
 # ================================================================

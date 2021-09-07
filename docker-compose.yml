@@ -142,7 +142,7 @@ services:
               "handlers": [
                 "console"
               ],
-              "level": "INFO",
+              "level": "DEBUG",
               "propagate": false
             }
           }
@@ -155,6 +155,7 @@ services:
       target: python-web
       args:
         PYTHON_VERSION: 3.8-alpine
+    image: betreiberverein_door_commander/python_image
     volumes:
       - "door-commander-python-data:/opt/door-commander.betreiberverein.de/data"
     networks:
@@ -166,9 +167,11 @@ services:
       # - "127.0.0.1:8000:8000"
 
   celery-beat:
-    build: *python-build
-    command: celery -A core beat -l info
-    volumes: []
+    #build: *python-build
+    image: betreiberverein_door_commander/python_image
+    command: celery -A door_commander beat -l info -s /opt/door-commander.betreiberverein.de/data/celerybeat-schedule
+    volumes:
+      - "celery-beat-schedule:/opt/door-commander.betreiberverein.de/data"
     environment: *python-environment
     depends_on:
       - redis
@@ -195,11 +198,14 @@ services:
     # this redis has no authentication.
     # NEVER EXPOSE ITS PORTS
     image: redis:alpine
+    networks:
+      - db
 
 
   celery:
-    command: celery -A core worker -l info
-    build: *python-build
+    command: celery -A door_commander worker -l info
+    #build: *python-build
+    image: betreiberverein_door_commander/python_image
     volumes: []
     environment: *python-environment
     depends_on:
@@ -207,6 +213,7 @@ services:
       - db
     networks:
       - db
+      - mqtt
 
 
 networks:
@@ -221,3 +228,4 @@ volumes:
   door-commander-postgres:
   door-commander-mosquitto-data:
   door-commander-mosquitto-log:
+  celery-beat-schedule:
