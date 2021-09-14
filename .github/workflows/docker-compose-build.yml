@@ -36,5 +36,5 @@ jobs:
       - name: Check
         run: source secrets.env ; docker-compose run --rm python ./manage.py check --deploy
       - name: Migrate
-        run: source secrets.env ; run --rm python ./manage.py migrate
+        run: source secrets.env ; docker-compose run --rm python ./manage.py migrate
         # TODO test
