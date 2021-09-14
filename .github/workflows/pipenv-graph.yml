@@ -1,0 +1,35 @@
+name: Pipenv Graph
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+    strategy:
+      max-parallel: 4
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python 3.9
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.9
+    - name: Install Dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install pipenv
+        pipenv install
+    - name: Show Dependencies
+      run: |
+        pipenv graph | tee graph.txt
+    - name: Archive results
+      uses: actions/upload-artifact@v2
+      with:
+        name: python-dependency-graph
+        path: graph.txt
