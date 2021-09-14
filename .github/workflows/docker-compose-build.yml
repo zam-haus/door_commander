@@ -25,10 +25,12 @@ jobs:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v2
 
-      - name: Set Secrets
-        run: ./set-secrets.sh
       - name: Build
         run: docker-compose build --parallel
+      - name: Pull
+        run: docker-compose pull
+      - name: Set Secrets
+        run: ./set-secrets.sh
       - name: Create
         run: docker-compose up --no-start --force-recreate
       - name: Check
