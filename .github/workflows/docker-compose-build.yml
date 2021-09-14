@@ -32,9 +32,9 @@ jobs:
       - name: Set Secrets
         run: ./set-secrets.sh
       - name: Create
-        run: docker-compose up --no-start --force-recreate
+        run: source secrets.env ; docker-compose up --no-start --force-recreate
       - name: Check
-        run: docker-compose run --rm python ./manage.py check --deploy
+        run: source secrets.env ; docker-compose run --rm python ./manage.py check --deploy
       - name: Migrate
-        run: run --rm python ./manage.py migrate
+        run: source secrets.env ; run --rm python ./manage.py migrate
         # TODO test
