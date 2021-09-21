@@ -82,6 +82,7 @@ ALLOWED_HOSTS = [
     '127.0.0.1',
     '[::1]',
     'python',
+    'sesam.zam.haus',
     # 'door-commander.betreiberverein.de',
 ]
 
