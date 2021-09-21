@@ -2,7 +2,7 @@ ARG PYTHON_VERSION=latest
 ARG NGINX_VERSION=latest
 FROM python:${PYTHON_VERSION} AS python-dependencies
 
-RUN apk add --no-cache openssl
+#RUN apk add --no-cache openssl
 ENV DOCKERIZE_VERSION v0.6.1
 RUN wget https://github.com/jwilder/dockerize/releases/download/$DOCKERIZE_VERSION/dockerize-alpine-linux-amd64-$DOCKERIZE_VERSION.tar.gz \
     && tar -C /usr/local/bin -xzvf dockerize-alpine-linux-amd64-$DOCKERIZE_VERSION.tar.gz \
@@ -18,21 +18,7 @@ COPY Pipfile.lock .
 # Otherwise, the venv would reside in /root/.local/share/virtualenvs/
 ENV PIPENV_VENV_IN_PROJECT=1
 # alpine does not support manylinux, and needs to compile psycopg2
-RUN apk add --no-cache postgresql-libs
-RUN \
-    apk add  --no-cache  --virtual .build-deps  \
-        gcc \
-        rust \
-        cargo \
-        libffi-dev  \
-        libressl-dev  \
-        musl-dev  \
-        openssl-dev  \
-        postgresql-dev  \
-        python3-dev \
-    && pipenv install --deploy \
-    && apk --purge del .build-deps
-
+RUN pipenv install --deploy
 
 
 FROM python-dependencies AS python-app
@@ -68,10 +54,10 @@ EXPOSE 80
 
 
 FROM python-app as python-web
-RUN addgroup -S appgroup && adduser -S appuser -G appgroup
-RUN chown appuser:appgroup data
+RUN adduser --system app --group
+RUN chown app:app data
 RUN chmod 700 data
-USER appuser
+USER app
 VOLUME /opt/door-commander.betreiberverein.de/data/
 
 EXPOSE 8000
