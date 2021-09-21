@@ -17,6 +17,7 @@ generate_password() { head -c32 /dev/random | base64; }
 
 
 
+echo ::group::MQTT Django Password
 # generate all necessary secrets and save them
 MQTT_PASSWD_CONTROLLER="$(generate_password)"
 export MQTT_PASSWD_CONTROLLER
@@ -24,16 +25,19 @@ declare -p MQTT_PASSWD_CONTROLLER >>secrets.env
 rm -f mosquitto/config/mosquitto.passwd
 touch mosquitto/config/mosquitto.passwd  # otherwise a directory will be created
 docker-compose run --rm mqtt mosquitto_passwd -b /mosquitto/config/mosquitto.passwd controller "$MQTT_PASSWD_CONTROLLER"
+echo ::endgroup::
 
 
 
 
-
+echo ::group::pgSQL Superuser Password
 POSTGRES_PASSWORD="$(generate_password)"
 export POSTGRES_PASSWORD
 declare -p POSTGRES_PASSWORD >>secrets.env
 docker-compose run --rm db /docker-postgres-run-command.sh /update_superuser.sh
+echo ::endgroup::
 
+echo ::group::pgSQL Django Password
 POSTGRES_PASSWORD_DJANGO="$(generate_password)"
 export POSTGRES_PASSWORD_DJANGO
 declare -p POSTGRES_PASSWORD_DJANGO >>secrets.env
@@ -41,12 +45,13 @@ USER="${POSTGRES_USER_DJANGO}" PASSWORD="${POSTGRES_PASSWORD_DJANGO}" DB="${POST
   docker-compose run --rm \
   -e USER -e PASSWORD -e DB \
   db /docker-postgres-run-command.sh /update_other_user.sh
+echo ::endgroup::
 
 
 
 
 
-
+echo ::group::OPAL Policy Repo Client Key
 # THIS KEY CONNECTS DOCKER TO GITHUB; IT IS NOT ROTATED AUTOMATICALLY
 test -f id_rsa_git || ssh-keygen -t rsa -b 4096 -m pem -f id_rsa_git -N ""
 OPAL_GIT_PRIVATE_KEY="$(cat id_rsa_git | tr '\n' '_')"
@@ -55,7 +60,9 @@ echo "Add this key to git:"
 echo "$OPAL_GIT_PUBLIC_KEY"
 export OPAL_GIT_PRIVATE_KEY
 declare -p OPAL_GIT_PRIVATE_KEY >>secrets.env
+echo ::endgroup::
 
+echo ::group::OPAL Internal Auth Key
 rm -f id_rsa id_rsa.pub
 ssh-keygen -t rsa -b 4096 -m pem -f id_rsa -N ""
 OPAL_AUTH_PRIVATE_KEY="$(cat id_rsa | tr '\n' '_')"
@@ -64,11 +71,15 @@ export OPAL_AUTH_PRIVATE_KEY
 export OPAL_AUTH_PUBLIC_KEY
 declare -p OPAL_AUTH_PRIVATE_KEY >>secrets.env
 declare -p OPAL_AUTH_PUBLIC_KEY >>secrets.env
+echo ::endgroup::
 
+echo ::group::OPAL Master Token
 OPAL_AUTH_MASTER_TOKEN="$(docker run --rm authorizon/opal-server opal-server generate-secret)"
 export OPAL_AUTH_MASTER_TOKEN
 declare -p OPAL_AUTH_MASTER_TOKEN >>secrets.env
+echo ::endgroup::
 
+echo ::group::OPAL Client Token
 # the -T disables docker-compose from allocating a TTY, which is necessary if we don't want a \r from CRLF line endings.
 # use --no-just-the-token to get an error message if the python code fails with when trying to find data['token']
 OPAL_AUTH_CLIENT_TOKEN="$(
@@ -79,6 +90,7 @@ OPAL_AUTH_CLIENT_TOKEN="$(
 )"
 export OPAL_AUTH_CLIENT_TOKEN
 declare -p OPAL_AUTH_CLIENT_TOKEN >> secrets.env
+echo ::endgroup::
 
 
 echo "TODO: You need to provide OIDC_RP_CLIENT_SECRET manually."

@@ -77,10 +77,10 @@ services:
       - ./mosquitto/config/mosquitto.acl:/mosquitto/config/mosquitto.acl:ro
       - ./mosquitto/config/mosquitto.passwd:/mosquitto/config/mosquitto.passwd
     networks:
+      - web
       - mqtt
     ports:
-      - "127.0.0.1:1883:1883" # TODO disable
-      - "127.0.0.1:1880:80" # TODO add TLS reverse proxy
+      - "127.0.0.1:8082:80" # with nginx SSL reverse proxy
 
   db:
     #image: postgres
@@ -188,7 +188,7 @@ services:
         PYTHON_VERSION: 3.8-alpine
         NGINX_VERSION: 1-alpine
     ports:
-      - "127.0.0.1:80:80"
+      - "127.0.0.1:8081:80"
     depends_on:
       - python
     networks:
@@ -222,6 +222,8 @@ networks:
   mqtt: # mosquitto <--> django
   db: # psql <--> django
   web: # nginx <--> django
+     external:
+        name: nginx_door_commander_external
 
 volumes:
   door-commander-python-data:
