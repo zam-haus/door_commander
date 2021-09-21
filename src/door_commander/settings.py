@@ -10,22 +10,60 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/3.1/ref/settings/
 """
 import ipaddress
+import json
+import logging
+import logging.config
+import os
+import pickle
 import socket
 from pathlib import Path
-from django.core.management.utils import get_random_secret_key
-import pickle
-import os
-import json
 
+from celery.schedules import crontab
+
+import door_commander.tasks
+
+# TODO this file becomes too long, use dynaconf or similar and split it up.
+
+from django.core.management.utils import get_random_secret_key
 from icecream import ic
+
+from .atomic_globals import AtomicGlobals
+
+# This tool allows to either declare all or no settings at all for a specific feature.
+atomic_globals = AtomicGlobals()
+
+# ================================================================
+# Logging
+# ================================================================
+# optionally install `rich` for colored logging
+
+log = logging.getLogger(__name__)
+
+try:
+    from rich.logging import RichHandler
+except:
+    RichHandler = None
 
 _DJANGO_LOGGING = os.getenv("DJANGO_LOGGING")
 LOGGING = json.loads(_DJANGO_LOGGING) if _DJANGO_LOGGING else {
     'version': 1,
     'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '%(levelname)s %(asctime)s %(name)s %(process)d %(thread)d %(message)s',
+        },
+        'simple': {
+            'format': '%(message)s',
+        },
+        'complex': {
+            'format': '%(processName)s#%(process)d @ %(module)s:%(name)s:%(funcName)s: %(message)s',
+        },
+    },
+
     'handlers': {
         'console': {
-            'class': 'logging.StreamHandler',
+            'class': 'rich.logging.RichHandler' if RichHandler else 'logging.StreamHandler',
+            'formatter': 'simple' if RichHandler else 'verbose'
         },
     },
     'root': {
@@ -38,24 +76,29 @@ LOGGING = json.loads(_DJANGO_LOGGING) if _DJANGO_LOGGING else {
             'level': 'INFO',
             'propagate': False,
         },
+        'decorated_paho_mqtt.mqtt_framework': {
+            'handlers': ['console'],
+            # paho seems to log everything, including connection errors at level 16, which is between DEBUG and INFO
+            'level': 'INFO',
+            'propagate': False,
+        }
     },
 }
+logging.config.dictConfig(LOGGING)
 
-
-
+# ================================================================
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
-from paho.mqtt.client import MQTTv5
-
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/3.1/howto/deployment/checklist/
+# ================================================================
+# Django Security Settings
+# ================================================================
 
 DEBUG_FILE = BASE_DIR.joinpath("./data/ACTIVATE_DEBUG_MODE")
 # If you want to debug; create a file in the directory indicated above.
 DEBUG = DEBUG_FILE.exists()
-ENABLE_LIVE_JS = DEBUG and False
+
 # this allows to use {% if debug %} in django templates.
 INTERNAL_IPS = ['127.0.0.1', '::1']
 
@@ -63,9 +106,7 @@ SECRET_KEY_FILE = BASE_DIR.joinpath("./data/django-secret-key.json")
 
 
 def load_or_create_secret_key() -> str:
-    # TODO we might want to record hostname and time of the secret creation in this json, to allow us to recognize if
-    #  it becomes a constant during docker builds. Also, we might want to delete/recreate it explicitly during
-    #  first startup.
+    # TODO we now pass all secrets via environment, we might want to do this here too.
     if SECRET_KEY_FILE.exists():
         secret = json.load(open(SECRET_KEY_FILE, "r"))
         return secret
@@ -86,7 +127,11 @@ ALLOWED_HOSTS = [
     # 'door-commander.betreiberverein.de',
 ]
 
-# Application definition
+# ================================================================
+# Framework applications
+# ================================================================
+# Our own apps are declared at the bottom of this file.
+
 
 INSTALLED_APPS = [
     'django.contrib.admin',  # https://docs.djangoproject.com/en/3.2/ref/contrib/admin/
@@ -95,8 +140,6 @@ INSTALLED_APPS = [
     'django.contrib.sessions',  # https://docs.djangoproject.com/en/3.2/topics/http/sessions/
     'django.contrib.messages',  # https://docs.djangoproject.com/en/3.2/ref/contrib/messages/
     'django.contrib.staticfiles',  # https://docs.djangoproject.com/en/3.2/ref/contrib/staticfiles/
-    'web_homepage',
-    'accounts',
 ]
 
 MIDDLEWARE = [
@@ -109,8 +152,28 @@ MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
 ]
 
+if DEBUG:
+    INSTALLED_APPS += [
+        'django_extensions',
+        'debug_toolbar',
+    ]
+    MIDDLEWARE += [
+        'debug_toolbar.middleware.DebugToolbarMiddleware',
+    ]
+
+# ================================================================
+# URLs
+# ================================================================
+
 ROOT_URLCONF = 'door_commander.urls'
-AUTH_USER_MODEL = "accounts.User"
+
+LOGIN_REDIRECT_URL = "/"
+LOGOUT_REDIRECT_URL = "/"
+
+# ================================================================
+# Jinja and Django Template Renderers and Paths
+# ================================================================
+
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.jinja2.Jinja2',
@@ -135,19 +198,28 @@ TEMPLATES = [
     },
 ]
 
+# ================================================================
+# Webserver
+# ================================================================
+
 WSGI_APPLICATION = 'door_commander.wsgi.application'
 
+# ================================================================
 # Database
+# ================================================================
+
+
 # https://docs.djangoproject.com/en/3.1/ref/settings/#databases
 
 POSTGRES_DB = os.getenv("POSTGRES_DB")
 if not POSTGRES_DB:
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.sqlite3',
-            'NAME': BASE_DIR / 'data' / 'db.sqlite3',
+    if DEBUG:
+        DATABASES = {
+            'default': {
+                'ENGINE': 'django.db.backends.sqlite3',
+                'NAME': BASE_DIR / 'data' / 'db.sqlite3',
+            }
         }
-    }
 else:
     POSTGRES_PASSWORD = os.getenv("POSTGRES_PASSWORD")
     POSTGRES_USER = os.getenv("POSTGRES_USER")
@@ -161,9 +233,83 @@ else:
         }
     }
 
-# Password validation
-# https://docs.djangoproject.com/en/3.1/ref/settings/#auth-password-validators
+# ================================================================
 
+# Internationalization
+# https://docs.djangoproject.com/en/3.1/topics/i18n/
+
+LANGUAGE_CODE = 'en-us'
+
+TIME_ZONE = 'UTC'
+
+USE_I18N = True
+
+USE_L10N = True
+
+USE_TZ = True
+
+# ================================================================
+
+# Static files (CSS, JavaScript, Images)
+# https://docs.djangoproject.com/en/3.1/howto/static-files/
+
+STATIC_URL = '/static/'
+# STATICFILES_DIRS = ["static"]
+STATIC_ROOT = os.getenv("COLLECTSTATIC_DIR", None)
+
+# ================================================================
+# IP Filtering Configuration # TODO currently without effect
+# ================================================================
+
+if False:
+    # TODO might be a vuln in some networks
+    PROXY_HOSTNAME = "nginx"
+    try:
+        _, _, _nginx_address = socket.gethostbyname_ex(PROXY_HOSTNAME)
+    except socket.gaierror:
+        _nginx_address = None
+
+    # TODO library is broken ~phi1010
+    if _nginx_address:
+        IPWARE_KWARGS = dict(request_header_order=['X_FORWARDED_FOR', 'HTTP_X_FORWARDED_FOR', 'REMOTE_ADDR', ],
+                             proxy_trusted_ips=[*_nginx_address])
+    else:
+        IPWARE_KWARGS = dict(proxy_trusted_ips=[], proxy_count=0)
+
+    PERMITTED_IP_NETWORKS = [ipaddress.ip_network('192.168.0.0/24')]
+
+# ================================================================
+# MQTT Configuration
+# ================================================================
+
+# https://www.eclipse.org/paho/index.php?page=clients/python/docs/index.php#connect-reconnect-disconnect
+# MQTT_CLIENT_KWARGS = dict(client_id="door_commander", transport="tcp")
+MQTT_CLIENT_KWARGS = dict(transport="tcp")
+MQTT_PASSWD_CONTROLLER = os.getenv("MQTT_PASSWD_CONTROLLER")
+MQTT_SERVER_KWARGS = os.getenv("MQTT_CONNECTION")
+if MQTT_SERVER_KWARGS is None:
+    MQTT_SERVER_KWARGS = dict(host="127.0.0.1", port=1883, keepalive=10)
+else:
+    MQTT_SERVER_KWARGS = json.loads(MQTT_SERVER_KWARGS)
+if MQTT_PASSWD_CONTROLLER:
+    MQTT_PASSWORD_AUTH = dict(username="controller", password=MQTT_PASSWD_CONTROLLER)
+else:
+    MQTT_PASSWORD_AUTH = None  # dict(username=...,password=...)
+
+MQTT_TLS = False
+
+# ================================================================
+# Authentication and OpenID Connect Configuration
+# ================================================================
+
+AUTH_USER_MODEL = "accounts.User"
+
+# Add 'mozilla_django_oidc' authentication backend
+AUTHENTICATION_BACKENDS = [
+    'django.contrib.auth.backends.ModelBackend',
+]
+
+# https://docs.djangoproject.com/en/3.1/ref/settings/#auth-password-validators
 AUTH_PASSWORD_VALIDATORS = [
     {
         'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
@@ -184,55 +330,116 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-# Internationalization
-# https://docs.djangoproject.com/en/3.1/topics/i18n/
+with atomic_globals:
+    # ic(dict(os.environ))
+    OIDC_RP_CLIENT_ID = os.environ['OIDC_RP_CLIENT_ID']
+    # TODO configuration option
+    OIDC_OP_JWKS_ENDPOINT = "https://sso.erlangen.ccc.de/auth/realms/ZAM/protocol/openid-connect/certs"
 
-LANGUAGE_CODE = 'en-us'
-
-TIME_ZONE = 'UTC'
-
-USE_I18N = True
-
-USE_L10N = True
-
-USE_TZ = True
-
-# Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/3.1/howto/static-files/
-
-STATIC_URL = '/static/'
-# STATICFILES_DIRS = ["static"]
-STATIC_ROOT = os.getenv("COLLECTSTATIC_DIR", None)
-
-LOGIN_REDIRECT_URL = "/"
-
-# TODO might be a vuln in some networks
-PROXY_HOSTNAME = "nginx"
-try:
-    _,_,_nginx_address = socket.gethostbyname_ex(PROXY_HOSTNAME)
-except socket.gaierror:
-    _nginx_address = None
-
-# TODO library is broken ~phi1010
-if _nginx_address:
-    IPWARE_KWARGS = dict(request_header_order=['X_FORWARDED_FOR', 'HTTP_X_FORWARDED_FOR', 'REMOTE_ADDR',], proxy_trusted_ips=[*_nginx_address])
+    OIDC_RP_CLIENT_SECRET = os.environ['OIDC_RP_CLIENT_SECRET']
+    OIDC_RENEW_ID_TOKEN_EXPIRY_SECONDS = 60 * 15
+    OIDC_OP_AUTHORIZATION_ENDPOINT = os.environ['OIDC_OP_AUTHORIZATION_ENDPOINT']
+    OIDC_OP_TOKEN_ENDPOINT = os.environ['OIDC_OP_TOKEN_ENDPOINT']
+    OIDC_OP_USER_ENDPOINT = os.environ['OIDC_OP_USER_ENDPOINT']
+    OIDC_OP_LOGOUT_URL = os.environ['OIDC_OP_LOGOUT_URL']
+    if OIDC_OP_LOGOUT_URL:
+        OIDC_OP_LOGOUT_URL_METHOD = 'door_commander.auth.provider_logout'
+    # TODO configuration option
+    OIDC_RP_SIGN_ALGO = "RS256"
+if atomic_globals:
+    OIDC = True
+    INSTALLED_APPS += [
+        'mozilla_django_oidc',  # Load after auth
+    ]
+    AUTHENTICATION_BACKENDS += [
+        #    'mozilla_django_oidc.auth.OIDCAuthenticationBackend',
+        'accounts.auth.CustomOidcAuthenticationBackend',
+    ]
+    MIDDLEWARE += [
+        # this might make API requests a bit more difficult
+        'mozilla_django_oidc.middleware.SessionRefresh',
+    ]
+    log.info("Successfully loaded OpenID Connect configuration")
 else:
-    IPWARE_KWARGS = dict(proxy_trusted_ips=[], proxy_count=0)
+    OIDC = False
+    log.warning("Did not load OpenID Connect configuration", exc_info=atomic_globals.exc_info)
 
-PERMITTED_IP_NETWORKS = [ipaddress.ip_network('192.168.0.0/24')]
+# ================================================================
+# GraphQL
+# ================================================================
 
-# https://www.eclipse.org/paho/index.php?page=clients/python/docs/index.php#connect-reconnect-disconnect
-# MQTT_CLIENT_KWARGS = dict(client_id="door_commander", transport="tcp")
-MQTT_CLIENT_KWARGS = dict(transport="tcp")
-MQTT_PASSWD_CONTROLLER = os.getenv("MQTT_PASSWD_CONTROLLER")
-MQTT_SERVER_KWARGS = os.getenv("MQTT_CONNECTION")
-if MQTT_SERVER_KWARGS is None:
-    MQTT_SERVER_KWARGS = dict(host="127.0.0.1", port=1883, keepalive=10)
-else:
-    MQTT_SERVER_KWARGS = json.loads(MQTT_SERVER_KWARGS)
-if MQTT_PASSWD_CONTROLLER:
-    MQTT_PASSWORD_AUTH = dict(username="controller", password=MQTT_PASSWD_CONTROLLER)
-else:
-    MQTT_PASSWORD_AUTH = None  # dict(username=...,password=...)
+INSTALLED_APPS += [
+    # 'django.contrib.staticfiles', # Required for GraphiQL
+    'graphene_django',
+]
 
-MQTT_TLS = False
+# Check http://127.0.0.1:8000/graphql
+# You could query:
+"""{
+  users {
+    id
+    fullName
+    displayName
+    username
+    isSuperuser
+    dateJoined
+  }
+  _debug{
+    sql {
+      sql
+      transId
+      transStatus
+      isoLevel
+      encoding
+      vendor
+      duration
+      startTime
+      stopTime
+      isSlow
+      isSelect
+    }
+  }
+}
+"""
+
+GRAPHENE = {
+    'SCHEMA': 'api.gql.schema',  # Where your Graphene schema lives
+    'MIDDLEWARE': [
+        'graphene_django.debug.DjangoDebugMiddleware',
+        # this hides exception messages, except for explicit graphql exceptions:
+        'api.gql.SecurityMiddleware',
+    ] if DEBUG else [],
+}
+
+# ================================================================
+# Celery
+# ================================================================
+CELERY_BROKER_URL = "redis://redis:6379"
+CELERY_RESULT_BACKEND = "redis://redis:6379"
+
+CELERY_BEAT_SCHEDULE = {
+    # "debug_task": {"task": "door_commander.tasks.debug_task", "schedule": crontab(minute="*/1"), },
+    "publish_door_names": {
+        "task": "doors.tasks.publish_door_names",
+        "schedule": crontab(minute="*/15"),
+    },
+}
+
+# ================================================================
+# Our own functional apps
+# ================================================================
+
+INSTALLED_APPS += [
+    'doors',
+    'accounts',
+    'api',
+    'web_homepage',
+
+]
+
+# ================================================================
+# Mail
+# ================================================================
+
+# TODO
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'

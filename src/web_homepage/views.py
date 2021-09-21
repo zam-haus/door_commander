@@ -1,33 +1,25 @@
-import http
 import ipaddress
-import json
 import logging
-import random
 import time
 
 from django.contrib.auth.decorators import login_required, permission_required
-from django.core.exceptions import ObjectDoesNotExist, PermissionDenied
-from django.shortcuts import redirect, render
-from django.http import HttpResponseNotFound
+from django.core.exceptions import PermissionDenied
 from django.shortcuts import render
 
-from django.http import HttpResponse
-from django.template.context_processors import request
 from django.views.decorators.http import require_POST
 from icecream import ic
-from paho.mqtt.client import Client
-from pymaybe import maybe
 from ipware import get_client_ip
 
-from door_commander import wsgi, settings
-from door_commander.mqtt import MqttDoorCommanderEndpoint, door_commander_mqtt
-from door_commander.settings import IPWARE_KWARGS, PERMITTED_IP_NETWORKS
-from web_homepage.models import Door
+from doors.mqtt import door_commander_mqtt
+from django.conf import settings
+from doors.models import PERMISSION_OPEN_DOOR, PERMISSION_LOCATION_OVERRIDE, Door
 
 log = logging.getLogger(__name__)
-log_ip = logging.getLogger(__name__+".ip")
+log_ip = logging.getLogger(__name__ + ".ip")
 
 
+IPWARE_KWARGS = getattr(settings, 'IPWARE_KWARGS', None)
+PERMITTED_IP_NETWORKS = getattr(settings, 'PERMITTED_IP_NETWORKS', None)
 
 def home(request):
     context = get_request_context(request)
@@ -68,25 +60,24 @@ def check_can_open_door(request):
 
 
 def check_has_allowed_location(request):
-    ip, is_public = get_client_ip(request, **IPWARE_KWARGS)
-    log_ip.debug(ic.format(ip, is_public))
-    log_ip.debug(ic.format(request.META))
-    log_ip.debug(ic.format(request.headers))
-    log_ip.debug(ic.format(settings.IPWARE_KWARGS, settings._nginx_address))
-    has_correct_location = False
-    if ip:
-        # Allow requests from the local network of the server
-        if not is_public:
-            has_correct_location = True
-        if any((ipaddress.ip_address(ip) in network for network in PERMITTED_IP_NETWORKS)):
-            has_correct_location = True
-        if request.user.has_perm(PERMISSION_LOCATION_OVERRIDE):
-            has_correct_location = True
-    return has_correct_location
-
-
-PERMISSION_OPEN_DOOR = 'door_controller.open_door'
-PERMISSION_LOCATION_OVERRIDE = 'door_controller.assume_correct_location'
+    if IPWARE_KWARGS is None or PERMITTED_IP_NETWORKS is None:
+        return True
+    else:
+        ip, is_public = get_client_ip(request, **IPWARE_KWARGS)
+        log_ip.debug(ic.format(ip, is_public))
+        # log_ip.debug(ic.format(request.META))
+        # log_ip.debug(ic.format(request.headers))
+        log_ip.debug(ic.format(IPWARE_KWARGS, getattr(settings,'_nginx_address',None)))
+        has_correct_location = False
+        if ip:
+            # Allow requests from the local network of the server
+            if not is_public:
+                has_correct_location = True
+            if any((ipaddress.ip_address(ip) in network for network in PERMITTED_IP_NETWORKS)):
+                has_correct_location = True
+            if request.user.has_perm(PERMISSION_LOCATION_OVERRIDE):
+                has_correct_location = True
+        return has_correct_location
 
 
 @require_POST  # for CSRF protection

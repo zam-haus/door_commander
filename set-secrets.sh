@@ -32,10 +32,8 @@ echo ::endgroup::
 
 echo ::group::pgSQL Superuser Password
 POSTGRES_PASSWORD="$(generate_password)"
-# no export, nobody needs this.
-declare -p POSTGRES_PASSWORD >>secrets.env
-# now we export this to set it in the container
 export POSTGRES_PASSWORD
+declare -p POSTGRES_PASSWORD >>secrets.env
 docker-compose run --rm db /docker-postgres-run-command.sh /update_superuser.sh
 echo ::endgroup::
 
@@ -91,10 +89,14 @@ OPAL_AUTH_CLIENT_TOKEN="$(
   #--no-just-the-token \
 )"
 export OPAL_AUTH_CLIENT_TOKEN
-declare -p OPAL_AUTH_CLIENT_TOKEN >>secrets.env
+declare -p OPAL_AUTH_CLIENT_TOKEN >> secrets.env
 echo ::endgroup::
 
 
+echo "TODO: You need to provide OIDC_RP_CLIENT_SECRET manually."
+OIDC_RP_CLIENT_SECRET=""
+export OIDC_RP_CLIENT_SECRET
+declare -p OIDC_RP_CLIENT_SECRET >> secrets.env
 
 
 

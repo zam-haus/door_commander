@@ -20,9 +20,18 @@ ENV PIPENV_VENV_IN_PROJECT=1
 # alpine does not support manylinux, and needs to compile psycopg2
 RUN apk add --no-cache postgresql-libs
 RUN \
-    apk add  --no-cache  --virtual .build-deps  gcc musl-dev postgresql-dev   && \
-    pipenv install --deploy   && \
-    apk --purge del .build-deps
+    apk add  --no-cache  --virtual .build-deps  \
+        gcc \
+        rust \
+        cargo \
+        libffi-dev  \
+        libressl-dev  \
+        musl-dev  \
+        openssl-dev  \
+        postgresql-dev  \
+        python3-dev \
+    && pipenv install --deploy \
+    && apk --purge del .build-deps
 
 
 

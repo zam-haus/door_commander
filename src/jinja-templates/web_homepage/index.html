@@ -6,38 +6,72 @@
 {% block body %}
     <h2>Navigation:</h2>
     <div>
-        <a href="{{ url("login") }}">login</a>
-        <a href="{{ url("logout") }}">logout</a>
-        <a href="{{ url("password_change") }}">password_change</a>
-        <a href="{{ url("password_reset") }}">password_reset</a>
-        <a href="{{ url("admin:index") }}">admin</a>
+        {% if request.user.is_authenticated %}
+            <div>
+                <form action="{{ url('oidc_logout') if oidc_active else url('logout') }}" method="post">
+                    {{ csrf_input }}
+                    <input type="submit" value="logout">
+                </form>
+            </div>
+            {% if request.user.has_usable_password %}
+                <div><a href="{{ url("password_change") }}">Change Password</a></div>
+            {% endif %}
+            {% if request.user.is_staff %}
+                <div><a href="{{ url("admin:index") }}">Admin Interface</a></div>
+            {% endif %}
+        {% else %}
+            {% if oidc_active %}
+                <div><a href="{{ url('oidc_authentication_init') }}">Login</a></div>
+                <div><a href="{{ url('login') }}">Local Login</a></div>
+            {% else %}
+                <div><a href="{{ url('login') }}">Login</a></div>
+            {% endif %}
+
+            <div>
+                <a href="{{ url("password_reset") }}">Reset Local Password</a>
+            </div>
+        {% endif %}
     </div>
-    <hr>
-    <h2>Doors' status:</h2>
-    <ul>
-        {% for (display_name, status) in doors_status %}
-            <li>
-            <b>Door <i>{{ display_name }}</i>:</b>
-            {{ "Unknown" if status is none }}
-            {{ "Open" if status == True }}
-            {{ "Closed" if status == False }}
-            </li>
-        {% endfor %}
-    </ul>
     <hr>
     <h2>Your data:</h2>
     <div><span>Logged in: </span><span>{{ request.user.is_authenticated }}</span></div>
     {% if request.user.is_authenticated %}
         <div><span>User: </span><span>{{ request.user }}</span></div>
+        <div><span>Email: </span><span>{{ request.user.email }}</span></div>
         <div><span>Display Name: </span><span>{{ request.user.display_name }}</span></div>
         <div><span>Full Name: </span><span>{{ request.user.full_name }}</span></div>
         <div><span>Last Password Change: </span><span>{{ request.user.password_last_changed }}</span></div>
+        <div><span>Can use and change password: </span><span>{{ request.user.has_usable_password() }}</span></div>
+        <div><span>Is Admin</span><span>{{ request.user.is_staff }}</span></div>
+        <div><span>Is Superadmin</span><span>{{ request.user.is_superuser }}</span></div>
         <div>
             <span>Permitted to open door (generally): </span><span>{{ request.user.has_perm(PERMISSION_OPEN_DOOR) }}</span>
         </div>
         <div><span>Permitted to open door (effectively): </span><span>{{ can_open_door }}</span></div>
+
+        {% if request.user.connections %}
+            {% for c in request.user.connections.all() %}
+                <div><span>Is registered with Directory: </span><span>{{ c.directory.name }}</span></div>
+                <div><span>With the following information: </span><span>{{ c.latest_directory_data }}</span>
+                </div>
+                <div><span>With the following user id </span><span>{{ c.directory_key }}</span></div>
+            {% endfor %}
+        {% endif %}
     {% endif %}
 
+
+    <hr>
+    <h2>Doors' status:</h2>
+    <ul>
+        {% for (display_name, status) in doors_status %}
+            <li>
+                <b>Door <i>{{ display_name }}</i>:</b>
+                {{ "Unknown" if status is none }}
+                {{ "Open" if status == True }}
+                {{ "Closed" if status == False }}
+            </li>
+        {% endfor %}
+    </ul>
     <hr>
     <h2>Your actions:</h2>
     {% if can_open_door %}

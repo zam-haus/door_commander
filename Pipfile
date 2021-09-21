@@ -17,10 +17,18 @@ paho-mqtt = "*"
 icecream = "*"
 pytest = "*"
 uuid = "*"
+mozilla-django-oidc = "*"
+django-extensions = "*"
+decorated-paho-mqtt = "*"
+graphene-django = "*"
+celery = "*"
+redis = "*"
 
 [dev-packages]
 selenium = "*"
 pylint = "*"
+rich = "*"
+django-debug-toolbar = "*"
 
 [requires]
 python_version = "3"

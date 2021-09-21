@@ -13,7 +13,4 @@ from django.core.asgi import get_asgi_application
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'door_commander.settings')
 
-from . import assert_database_password, mqtt
-
-mqtt.start_connection()
 application = get_asgi_application()

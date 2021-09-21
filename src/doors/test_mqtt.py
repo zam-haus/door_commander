@@ -1,8 +1,7 @@
 #!/usr/bin/env pytest
 import pytest
-from icecream import ic
 
-from door_commander.mqtt import unpack_topic
+from doors.mqtt import unpack_topic
 
 testdata = {
     ("", ""): [],

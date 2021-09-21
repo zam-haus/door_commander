@@ -106,7 +106,15 @@ services:
   python:
     depends_on:
       - db
+      - redis
     environment:
+      &python-environment
+      OIDC_RP_CLIENT_ID:
+      OIDC_RP_CLIENT_SECRET:
+      OIDC_OP_LOGOUT_URL:
+      OIDC_OP_USER_ENDPOINT:
+      OIDC_OP_AUTHORIZATION_ENDPOINT:
+      OIDC_OP_TOKEN_ENDPOINT:
       POSTGRES_PASSWORD: '${POSTGRES_PASSWORD_DJANGO}'
       POSTGRES_USER: '${POSTGRES_USER_DJANGO}'
       POSTGRES_DB: '${POSTGRES_DB_DJANGO}'
@@ -134,18 +142,20 @@ services:
               "handlers": [
                 "console"
               ],
-              "level": "INFO",
+              "level": "DEBUG",
               "propagate": false
             }
           }
         }
         '
     build:
+      &python-build
       context: ""
       dockerfile: Dockerfile
       target: python-web
       args:
         PYTHON_VERSION: 3.8-alpine
+    image: betreiberverein_door_commander/python_image
     volumes:
       - "door-commander-python-data:/opt/door-commander.betreiberverein.de/data"
     networks:
@@ -156,6 +166,18 @@ services:
     ports: []
       # - "127.0.0.1:8000:8000"
 
+  celery-beat:
+    #build: *python-build
+    image: betreiberverein_door_commander/python_image
+    command: celery -A door_commander beat -l info -s /opt/door-commander.betreiberverein.de/data/celerybeat-schedule
+    volumes:
+      - "celery-beat-schedule:/opt/door-commander.betreiberverein.de/data"
+    environment: *python-environment
+    depends_on:
+      - redis
+      - db
+    networks:
+      - db
 
   nginx:
     build:
@@ -172,6 +194,27 @@ services:
     networks:
       - web
 
+  redis:
+    # this redis has no authentication.
+    # NEVER EXPOSE ITS PORTS
+    image: redis:alpine
+    networks:
+      - db
+
+
+  celery:
+    command: celery -A door_commander worker -l info
+    #build: *python-build
+    image: betreiberverein_door_commander/python_image
+    volumes: []
+    environment: *python-environment
+    depends_on:
+      - redis
+      - db
+    networks:
+      - db
+      - mqtt
+
 
 networks:
   opa: # OPA / OPAL-Client <--> django
@@ -187,3 +230,4 @@ volumes:
   door-commander-postgres:
   door-commander-mosquitto-data:
   door-commander-mosquitto-log:
+  celery-beat-schedule:
