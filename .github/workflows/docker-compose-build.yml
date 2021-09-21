@@ -20,11 +20,6 @@ jobs:
     # The type of runner that the job will run on
     runs-on: ubuntu-latest
 
-    services:
-      registry:
-        image: registry:2
-        ports:
-          - 5000:5000
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
@@ -33,7 +28,7 @@ jobs:
       - name: Build
         run: docker-compose build --parallel
       - name: Pull
-        run: docker-compose pull
+        run: docker-compose pull --ignore-pull-failures
       - name: Set Secrets
         run: ./set-secrets.sh
       - name: Create
