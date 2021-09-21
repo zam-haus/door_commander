@@ -155,7 +155,7 @@ services:
       target: python-web
       args:
         PYTHON_VERSION: 3.8
-    image: python_image
+    #image: python_image
     volumes:
       - "door-commander-python-data:/opt/door-commander.betreiberverein.de/data"
     networks:
@@ -167,8 +167,8 @@ services:
       # - "127.0.0.1:8000:8000"
 
   celery-beat:
-    #build: *python-build
-    image: python_image
+    build: *python-build
+    #image: python_image
     command: celery -A door_commander beat -l info -s /opt/door-commander.betreiberverein.de/data/celerybeat-schedule
     volumes:
       - "celery-beat-schedule:/opt/door-commander.betreiberverein.de/data"
@@ -204,8 +204,8 @@ services:
 
   celery:
     command: celery -A door_commander worker -l info
-    #build: *python-build
-    image: python_image
+    build: *python-build
+    #image: python_image
     volumes: []
     environment: *python-environment
     depends_on:

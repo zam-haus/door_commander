@@ -28,7 +28,7 @@ jobs:
       - name: Build
         run: docker-compose build --parallel
       - name: Pull
-        run: docker-compose pull --ignore-pull-failures
+        run: docker-compose pull
       - name: Set Secrets
         run: ./set-secrets.sh
       - name: Create
