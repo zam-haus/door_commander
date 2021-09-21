@@ -222,8 +222,6 @@ networks:
   mqtt: # mosquitto <--> django
   db: # psql <--> django
   web: # nginx <--> django
-     external:
-        name: nginx_door_commander_external
 
 volumes:
   door-commander-python-data:
