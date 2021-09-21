@@ -343,7 +343,7 @@ with atomic_globals:
     OIDC_OP_USER_ENDPOINT = os.environ['OIDC_OP_USER_ENDPOINT']
     OIDC_OP_LOGOUT_URL = os.environ['OIDC_OP_LOGOUT_URL']
     if OIDC_OP_LOGOUT_URL:
-        OIDC_OP_LOGOUT_URL_METHOD = 'door_commander.auth.provider_logout'
+        OIDC_OP_LOGOUT_URL_METHOD = 'accounts.auth.provider_logout'
     # TODO configuration option
     OIDC_RP_SIGN_ALGO = "RS256"
 if atomic_globals:
