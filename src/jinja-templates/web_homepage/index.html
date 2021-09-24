@@ -13,7 +13,7 @@
                     <input type="submit" value="logout">
                 </form>
             </div>
-            {% if request.user.has_usable_password %}
+            {% if request.user.has_usable_password() %}
                 <div><a href="{{ url("password_change") }}">Change Password</a></div>
             {% endif %}
             {% if request.user.is_staff %}

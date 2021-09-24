@@ -23,6 +23,7 @@ decorated-paho-mqtt = "*"
 graphene-django = "*"
 celery = "*"
 redis = "*"
+lazy-object-proxy = "*"
 
 [dev-packages]
 selenium = "*"

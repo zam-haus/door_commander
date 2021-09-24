@@ -5,5 +5,5 @@ class Command(BaseCommand):
     help = "A description of the command"
 
     def handle(self, *args, **options):
-        publish_door_names()
+        publish_door_names(True)
 

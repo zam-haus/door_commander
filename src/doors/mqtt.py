@@ -12,6 +12,8 @@ from pymaybe import maybe
 
 from door_commander.settings import MQTT_CLIENT_KWARGS, MQTT_SERVER_KWARGS, MQTT_PASSWORD_AUTH, MQTT_TLS
 from doors.models import Door
+import lazy_object_proxy
+
 
 log = getLogger(__name__)
 
@@ -20,8 +22,12 @@ class MqttDoorCommanderEndpoint(GenericMqttEndpoint):
     def __init__(self, client_kwargs: dict, password_auth: dict, server_kwargs: dict, tls: bool):
         super().__init__(client_kwargs, password_auth, server_kwargs, tls)
 
-        self.doors_presence = dict()
+        self._doors_presence = dict()
         """This is indexed by mqtt id"""
+
+    @property
+    def doors_presence(self):
+        return self._doors_presence
 
     @property
     def is_connected(self):
@@ -51,9 +57,9 @@ class MqttDoorCommanderEndpoint(GenericMqttEndpoint):
                parsed_payload,
                door_id)
 
-            self.doors_presence[door_id] = bool(parsed_payload)
+            self._doors_presence[door_id] = bool(parsed_payload)
 
-            ic(self.doors_presence)
+            ic(self._doors_presence)
         except:
             log.error("Failed to parse door presence message.")
 
@@ -75,4 +81,4 @@ def start_connection():
     door_commander_mqtt.connect()
     return door_commander_mqtt
 
-door_commander_mqtt: MqttDoorCommanderEndpoint = lazy(start_connection,MqttDoorCommanderEndpoint)()
+door_commander_mqtt: MqttDoorCommanderEndpoint = lazy_object_proxy.Proxy(start_connection)
