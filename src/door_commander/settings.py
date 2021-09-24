@@ -152,6 +152,14 @@ MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
 ]
 
+
+SILENCED_SYSTEM_CHECKS = [
+    "security.W008", # SECURE_SSL_REDIRECT -> responsibility of nginx.
+    "security.W004", # SECURE_HSTS_SECONDS -> responsibility of nginx.
+]
+SESSION_COOKIE_SECURE = False if DEBUG else True
+
+
 if DEBUG:
     INSTALLED_APPS += [
         'django_extensions',

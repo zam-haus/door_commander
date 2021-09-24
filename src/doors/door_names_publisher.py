@@ -7,12 +7,13 @@ from doors.models import Door
 log = logging.getLogger(__name__)
 
 
-def publish_door_names():
+def publish_door_names(sync=False):
     for door in Door.objects.all():
-        publish_door_name(door)
+        publish_door_name(door,sync)
 
 
-def publish_door_name(door):
+def publish_door_name(door,sync=False):
     log.info("publishing door names for door {}".format(door.id))
     pub = door_commander_mqtt.door_name(door.mqtt_id, door.display_name)
-    pub.wait_for_publish()
+    if sync:
+        pub.wait_for_publish()
