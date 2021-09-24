@@ -9,7 +9,7 @@ class Door(DjangoObjectType):
     class Meta:
         model = DoorModel
 
-    status = graphene.Field('web_homepage.gql.DoorStatus')
+    status = graphene.Field('doors.gql.DoorStatus')
 
     def resolve_status(self, info):
         if self.mqtt_id in mqtt.door_commander_mqtt.doors_presence:
