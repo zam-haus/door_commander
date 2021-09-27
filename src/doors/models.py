@@ -16,6 +16,6 @@ class Door(models.Model):
     display_name = models.TextField()
     class Meta:
         permissions = [
-            (PERMISSION_OPEN_DOOR, "Can open any door"),
-            (PERMISSION_LOCATION_OVERRIDE, "Can open doors from anywhere"),
+            (_PERMISSION_OPEN_DOOR, "Can open any door"),
+            (_PERMISSION_LOCATION_OVERRIDE, "Can open doors from anywhere"),
         ]
