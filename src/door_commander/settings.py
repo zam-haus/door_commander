@@ -158,7 +158,7 @@ SILENCED_SYSTEM_CHECKS = [
     "security.W004", # SECURE_HSTS_SECONDS -> responsibility of nginx.
 ]
 SESSION_COOKIE_SECURE = False if DEBUG else True
-
+# TODO CSRF_COOKIE_SECURE
 
 if DEBUG:
     INSTALLED_APPS += [

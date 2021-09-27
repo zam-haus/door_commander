@@ -63,6 +63,8 @@ class CustomOidcAuthenticationBackend(OIDCAuthenticationBackend):
             user.full_name = claims.get("name")
             user.display_name = claims.get("preferred_username")
             user.set_unusable_password()
+            # TODO we might need a way to choose another username if the one here is already taken.
+            #  currently, this will raise an exception when a user is redefined due to a unique constraint.
             user.username = claims.get("preferred_username")
             user.save()
 
