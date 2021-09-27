@@ -10,10 +10,14 @@ from icecream import ic
 from paho.mqtt.client import MQTTMessage
 from pymaybe import maybe
 
-from door_commander.settings import MQTT_CLIENT_KWARGS, MQTT_SERVER_KWARGS, MQTT_PASSWORD_AUTH, MQTT_TLS
+from django.conf import settings
 from doors.models import Door
 import lazy_object_proxy
 
+MQTT_CLIENT_KWARGS = settings.MQTT_CLIENT_KWARGS
+MQTT_SERVER_KWARGS = settings.MQTT_SERVER_KWARGS
+MQTT_PASSWORD_AUTH = settings.MQTT_PASSWORD_AUTH
+MQTT_TLS = settings.MQTT_TLS
 
 log = getLogger(__name__)
 
