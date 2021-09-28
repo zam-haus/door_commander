@@ -201,7 +201,6 @@ services:
     networks:
       - db
 
-
   celery:
     command: celery -A door_commander worker -l info
     build: *python-build
