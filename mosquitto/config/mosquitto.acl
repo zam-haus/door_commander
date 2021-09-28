@@ -1,5 +1,8 @@
-# everyone can read everything, there are no secrets
+# anonymous can read everything, there are no secrets
 topic read #
+
+# every loged in user can read everything
+pattern read #
 
 # Doors can write their own status and confirm receipt
 # Door usernames should be semantic-free, e.g. UUIDs
