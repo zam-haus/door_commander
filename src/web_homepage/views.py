@@ -4,7 +4,7 @@ import time
 
 from django.contrib.auth.decorators import login_required, permission_required
 from django.core.exceptions import PermissionDenied
-from django.shortcuts import render, redirect
+from django.shortcuts import render
 
 from django.views.decorators.http import require_POST
 from icecream import ic
@@ -94,5 +94,4 @@ def open(request, door_id):
     door_commander_mqtt.open(mqtt_id, timeout=time.time() + 30)
 
     context = dict(message=str())
-    return redirect(home)
-    #return render(request, 'web_homepage/open.html', context=context)
+    return render(request, 'web_homepage/open.html', context=context)
