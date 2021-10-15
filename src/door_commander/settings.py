@@ -19,6 +19,7 @@ import socket
 from pathlib import Path
 
 from celery.schedules import crontab
+from ipware.descriptor import ReverseProxy, Header
 
 import door_commander.tasks
 
@@ -269,22 +270,21 @@ STATIC_ROOT = os.getenv("COLLECTSTATIC_DIR", None)
 # IP Filtering Configuration # TODO currently without effect
 # ================================================================
 
-if False:
-    # TODO might be a vuln in some networks
-    PROXY_HOSTNAME = "nginx"
-    try:
-        _, _, _nginx_address = socket.gethostbyname_ex(PROXY_HOSTNAME)
-    except socket.gaierror:
-        _nginx_address = None
+# TODO might be a vuln in some networks
+PROXY_HOSTNAME = "nginx"
+try:
+    _, _, _nginx_address = socket.gethostbyname_ex(PROXY_HOSTNAME)
+except socket.gaierror:
+    _nginx_address = None
 
-    # TODO library is broken ~phi1010
-    if _nginx_address:
-        IPWARE_KWARGS = dict(request_header_order=['X_FORWARDED_FOR', 'HTTP_X_FORWARDED_FOR', 'REMOTE_ADDR', ],
-                             proxy_trusted_ips=[*_nginx_address])
-    else:
-        IPWARE_KWARGS = dict(proxy_trusted_ips=[], proxy_count=0)
+if _nginx_address:
+    IPWARE_REVERSE_PROXIES = [
+        ReverseProxy(Header("X-Forwarded-For"), *_nginx_address),
+    ]
+else:
+    IPWARE_REVERSE_PROXIES = []
 
-    PERMITTED_IP_NETWORKS = [ipaddress.ip_network('192.168.0.0/24')]
+PERMITTED_IP_NETWORKS = [ipaddress.ip_network('192.168.0.0/24')]
 
 # ================================================================
 # MQTT Configuration
@@ -442,7 +442,7 @@ INSTALLED_APPS += [
     'accounts',
     'api',
     'web_homepage',
-
+    'clientipaddress',
 ]
 
 # ================================================================
