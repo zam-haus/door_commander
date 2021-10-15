@@ -11,7 +11,7 @@ gunicorn = "*"
 jinja2 = "*"
 psycopg2-binary = "*"
 pymaybe = "*"
-django-ipware = "*"
+django-ipware = {editable = true, git = "https://github.com/phi1010/django-ipware.git"}
 pylint = "*"
 paho-mqtt = "*"
 icecream = "*"
