@@ -81,6 +81,7 @@ services:
       - mqtt
     ports:
       - "127.0.0.1:8082:80" # with nginx SSL reverse proxy
+    restart: unless-stopped
 
   db:
     #image: postgres
@@ -94,7 +95,7 @@ services:
       - POSTGRES_USER=user
       - POSTGRES_PASSWORD
       - POSTGRES_DB=db
-    #restart: unless-stopped
+    restart: unless-stopped
     volumes:
       - door-commander-postgres:/var/lib/postgresql/data
     #ports:
@@ -165,6 +166,7 @@ services:
       - mqtt
     ports: []
       # - "127.0.0.1:8000:8000"
+    restart: unless-stopped
 
   celery-beat:
     build: *python-build
@@ -191,6 +193,7 @@ services:
       - python
     networks:
       - web
+    restart: unless-stopped
 
   redis:
     # this redis has no authentication.
