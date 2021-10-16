@@ -53,21 +53,13 @@ class MqttWifiLocatorEndpoint(GenericMqttEndpoint):
             timestamp = props.timestamp
             parsed_payload = loads(message.payload)
             # door_id, = unpack_topic("door/+/presence", message.topic)
-            ic(topic,
-               props,
-               locally_faked_timestamp,
-               timestamp,
-               retained,
-               message.payload,
-               parsed_payload,
-               locator_id)
 
             ips = parsed_payload["ip_addresses"]
             # for now, it is not yet decided whether we need netmasks, thus we only accept single IPs, but already convert them to a network here.
             parsed_ip_networks = [ip_network(ip_address(ip)) for ip in ips]
             self._ip_networks[locator_id] = parsed_ip_networks
 
-            ic(self._ip_networks)
+            # ic(self._ip_networks)
         except:
             log.error("Failed to parse door presence message.")
 
