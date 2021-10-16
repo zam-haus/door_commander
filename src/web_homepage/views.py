@@ -10,7 +10,6 @@ from django.views.decorators.http import require_POST
 from icecream import ic
 from ipware import get_client_ip
 
-from door_commander.loglevel import AUDIT
 from doors.mqtt import door_commander_mqtt
 from django.conf import settings
 from doors.models import PERMISSION_OPEN_DOOR, PERMISSION_LOCATION_OVERRIDE, Door
@@ -91,8 +90,6 @@ def open(request, door_id):
     assert door_commander_mqtt
     door = Door.objects.get(pk=door_id)
     mqtt_id = door.mqtt_id
-
-    log.log(AUDIT, f"User {request.user.pk!s} ({request.user.username!r}) opened the door {door.pk!s} ({door.display_name!r}).")
 
     door_commander_mqtt.open(mqtt_id, timeout=time.time() + 30)
 
