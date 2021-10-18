@@ -36,6 +36,13 @@ button, input {
 {% if request.user.is_authenticated %}
     <h2>Hallo, {{ request.user.display_name }}!</h2>
     {% if can_open_door %}
+        {% if not has_allowed_location %}
+            <div>
+                T&uuml;ren lassesn sich nur aus dem ZAM WLAN &ouml;ffnen!<br/>
+                WLAN: ZAM, Kennwort: MachWas!<br/>
+                (diese Nachricht verschwindet, wenn du im richtigen WLAN bist)
+            </div>
+        {% endif %}
         <div>
             {% for (door_id, display_name) in doors.items() %}
                 <form action="{{ url("open", kwargs=dict(door_id=door_id)) }}" method="post">
@@ -140,6 +147,13 @@ button, input {
     <hr>
     <h2>Your actions:</h2>
     {% if can_open_door %}
+        {% if not has_allowed_location %}
+            <div>
+                T&uuml;ren lassesn sich nur aus dem ZAM WLAN &ouml;ffnen!<br/>
+	        WLAN: ZAM, Kennwort: MachWas!<br/>
+	        (diese Nachricht verschwindet, wenn du im richtigen WLAN bist)
+            </div>
+	{% endif %}
         <div>
             {% for (door_id, display_name) in doors.items() %}
                 <form action="{{ url("open", kwargs=dict(door_id=door_id)) }}" method="post">
