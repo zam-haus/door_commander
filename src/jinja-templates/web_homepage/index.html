@@ -2,80 +2,88 @@
 {% block head %}
     {{ super() }}
     {# ... #}
-<style>
-h2 {
-   font: sans-serif;
-}
-button, input {
-  border: none;
-  color: white;
-  padding: 15px 32px;
-  text-align: center;
-  vertical-align: middle;
-  text-decoration: none;
-  display: inline-block;
-  font-size: 5vw;
-  width: 100%;
-  margin: 5px 0 0 0;
-  cursor: pointer;
-  -webkit-appearance: none;
-  -moz-appearance: none;
-}
-.open {
-  background-color: MediumSeaGreen;
-}
-.logout {
-  background-color: Tomato;
-}
-.login {
-  background-color: SlateBlue;
-}
-</style
+    <style>
+        h2 {
+            font: sans-serif;
+        }
+
+        button, input {
+            border: none;
+            color: white;
+            padding: 15px 32px;
+            text-align: center;
+            vertical-align: middle;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 5vw;
+            width: 100%;
+            margin: 5px 0 0 0;
+            cursor: pointer;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+        }
+
+        .open {
+            background-color: MediumSeaGreen;
+        }
+
+        .logout {
+            background-color: Tomato;
+        }
+
+        .login {
+            background-color: SlateBlue;
+        }
+    </style
 {% endblock %}
 {% block body %}
-{% if request.user.is_authenticated %}
-    <h2>Hallo, {{ request.user.display_name }}!</h2>
-    {% if can_open_door %}
-        {% if not has_allowed_location %}
+    {% if request.user.is_authenticated %}
+        <h2>Hallo, {{ request.user.display_name }}!</h2>
+        {% if can_open_door %}
+            {% if not has_allowed_location %}
+                <div>
+                    T&uuml;ren lassesn sich nur aus dem ZAM WLAN &ouml;ffnen!<br/>
+                    WLAN: ZAM, Kennwort: MachWas!<br/>
+                    (diese Nachricht verschwindet, wenn du im richtigen WLAN bist)
+                </div>
+            {% endif %}
             <div>
-                T&uuml;ren lassesn sich nur aus dem ZAM WLAN &ouml;ffnen!<br/>
-                WLAN: ZAM, Kennwort: MachWas!<br/>
-                (diese Nachricht verschwindet, wenn du im richtigen WLAN bist)
+                {% for (door_id, display_name) in doors.items() %}
+                    <form action="{{ url("open", kwargs=dict(door_id=door_id)) }}" method="post">
+                        {{ csrf_input }}
+                        <button type="submit" class="open">{{ display_name }} &ouml;ffnen!</button>
+                    </form>
+                {% endfor %}
             </div>
         {% endif %}
-        <div>
-            {% for (door_id, display_name) in doors.items() %}
-                <form action="{{ url("open", kwargs=dict(door_id=door_id)) }}" method="post">
-                    {{ csrf_input }}
-                    <button type="submit" class="open">{{ display_name }} &ouml;ffnen!</button>
-                </form>
+        <ul>
+            {% for (display_name, status) in doors_status %}
+                <li>
+                    <b>{{ display_name }}</b>
+                    {% if status == True %}
+                        ist <span style="color: MediumSeaGreen;">offen</span>
+                    {% elif status == False %}
+                        ist <span style="color: Tomato;">geschlossen</span>
+                    {% else %}
+                        ist in einem unbekannten Zustand"
+                    {% endif %}
+                </li>
             {% endfor %}
+        </ul>
+        <div>
+            <form action="{{ url('oidc_logout') if oidc_active else url('logout') }}" method="post">
+                {{ csrf_input }}
+                <input class="logout" type="submit" value="Logout">
+            </form>
+        </div>
+    {% else %}
+        <div>
+            <form action="{{ url('oidc_authentication_init') }}" method="get">
+                <input class="login" type="submit" value="Login">
+            </form>
         </div>
     {% endif %}
-    <ul>
-    {% for (display_name, status) in doors_status %}
-        <li>
-            <b>{{ display_name }}</b>
-            {{ "in einem unbekannten Zustand" if status is none }}
-    	{{ "ist <font style=\"color: MediumSeaGreen;\">offen</font>" if status == True }}
-    	{{ "ist <font color=\"color: Tomato;\">geschlossen</font>" if status == False }}
-        </li>
-    {% endfor %}
-    </ul>
-    <div>
-        <form action="{{ url('oidc_logout') if oidc_active else url('logout') }}" method="post">
-            {{ csrf_input }}
-            <input class="logout" type="submit" value="Logout">
-        </form>
-    </div>
-{% else %}
-    <div>
-        <form action="{{ url('oidc_authentication_init') }}" method="get">
-            <input class="login" type="submit" value="Login">
-        </form>
-    </div>
-{% endif %}
-{#
+    {#
     <h2>Navigation:</h2>
     <div>
         {% if request.user.is_authenticated %}
