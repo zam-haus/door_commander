@@ -37,8 +37,8 @@ button, input {
     <h2>Hallo, {{ request.user.display_name }}!</h2>
     {% if can_open_door %}
         {% if not has_allowed_location %}
-            <div>
-                T&uuml;ren lassesn sich nur aus dem ZAM WLAN &ouml;ffnen!<br/>
+            <div style="color: DarkRed;">
+                T&uuml;ren lassen sich nur aus dem ZAM WLAN &ouml;ffnen!<br/>
                 WLAN: ZAM, Kennwort: MachWas!<br/>
                 (diese Nachricht verschwindet, wenn du im richtigen WLAN bist)
             </div>
