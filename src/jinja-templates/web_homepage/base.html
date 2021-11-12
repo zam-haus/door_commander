@@ -6,11 +6,27 @@
         <link
                 rel="shortcut icon" type="image/png"
                 href="https://betreiberverein.de/wp-content/uploads/2020/11/cropped-201120_Foerderverein_LOGO_RGB_ohneText.png"/>
-        <title>ZAM Door Commander</title>
+        <title>Se-ZAM öffne dich!</title>
     {% endblock %}
 </head>
 <body>
+<center>
+   <svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" align="center" width="50%" viewBox="0 0 512 206.2" style="enable-background:new 0 0 512 206.2;" xml:space="preserve">
+      <path d="M452,28.3c-19.5,0-36,15.4-37.2,34.7c-1.5-19.3-17.9-34.7-37.4-34.7c-20.6,0-37.4,16.8-37.4,37.4h-0.2v37.4h0.2v74.8h37.4
+	V107c2.1,18.7,17.9,33.5,37.2,33.5c20.6,0,37.4-16.8,37.4-37.4v74.8h37.4V65.7C489.4,45.1,472.5,28.3,452,28.3 M272.2,177.9h37.4
+	V28.3h-37.4V177.9z M234.8,65.7h37.4c0-20.6-16.8-37.4-37.4-37.4c-20.6,0-37.4,16.8-37.4,37.4v74.8c0,20.6,16.8,37.4,37.4,37.4
+	c20.6,0,37.4-16.8,37.4-37.4h-37.4V65.7z M24.6,177.9h149.6v-37.4H24.6V177.9z M32.1,140.5l144.4-38.7l-9.8-36.2L22.4,104.3
+	L32.1,140.5z M24.6,65.7h149.6V28.3H24.6V65.7z"/>
+   </svg>
+</center>
 <div>
+    {% if messages %}
+        <ul class="messages">
+            {% for message in messages %}
+	        <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+            {% endfor %}
+        </ul>
+    {% endif %}
     {% block body %}
     {% endblock %}
 </div>

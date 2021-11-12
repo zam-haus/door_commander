@@ -81,6 +81,7 @@ services:
       - mqtt
     ports:
       - "127.0.0.1:8082:80" # with nginx SSL reverse proxy
+    restart: unless-stopped
 
   db:
     #image: postgres
@@ -94,7 +95,7 @@ services:
       - POSTGRES_USER=user
       - POSTGRES_PASSWORD
       - POSTGRES_DB=db
-    #restart: unless-stopped
+    restart: unless-stopped
     volumes:
       - door-commander-postgres:/var/lib/postgresql/data
     #ports:
@@ -169,6 +170,7 @@ services:
       - mqtt
     ports: []
       # - "127.0.0.1:8000:8000"
+    restart: unless-stopped
 
   celery-beat:
     build: *python-build
@@ -191,12 +193,11 @@ services:
       args:
         PYTHON_VERSION: 3.8
         NGINX_VERSION: 1-alpine
-    ports:
-      - "127.0.0.1:80:80"
     depends_on:
       - python
     networks:
       - web
+    restart: unless-stopped
 
   redis:
     # this redis has no authentication.
@@ -204,7 +205,6 @@ services:
     image: redis:alpine
     networks:
       - db
-
 
   celery:
     command: celery -A door_commander worker -l info
@@ -226,6 +226,8 @@ networks:
   mqtt: # mosquitto <--> django
   db: # psql <--> django
   web: # nginx <--> django
+    external:
+      name: nginx_door_commander_external
 
 volumes:
   door-commander-python-data:
