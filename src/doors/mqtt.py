@@ -63,7 +63,7 @@ class MqttDoorCommanderEndpoint(GenericMqttEndpoint):
 
             self._doors_presence[door_id] = bool(parsed_payload)
 
-            ic(self._doors_presence)
+            #ic(self._doors_presence)
         except:
             log.error("Failed to parse door presence message.")
 
