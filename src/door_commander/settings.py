@@ -289,6 +289,7 @@ else:
     IPWARE_REVERSE_PROXIES = []
 
 PERMITTED_IP_NETWORKS = [ipaddress.ip_network('192.168.0.0/24')]
+IPWARE_KWARGS = {}
 
 # ================================================================
 # MQTT Configuration
