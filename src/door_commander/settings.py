@@ -109,6 +109,7 @@ INTERNAL_IPS = ['127.0.0.1', '::1']
 
 SECRET_KEY_FILE = BASE_DIR.joinpath("./data/django-secret-key.json")
 
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 def load_or_create_secret_key() -> str:
     # TODO we now pass all secrets via environment, we might want to do this here too.
