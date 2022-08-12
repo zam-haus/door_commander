@@ -102,7 +102,6 @@ services:
     volumes:
       - "door-commander-python-data:/opt/door-commander.betreiberverein.de/data"
     networks:
-      - opa
       - db
       - web
       - mqtt
@@ -162,8 +161,6 @@ services:
 
 
 networks:
-  opa: # OPA / OPAL-Client <--> django
-  opal: # OPAL Server <--> OPAL Client
   mqtt: # mosquitto <--> django
   db: # psql <--> django
   web: # nginx <--> django
