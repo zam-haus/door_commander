@@ -194,6 +194,8 @@ services:
       args:
         PYTHON_VERSION: 3.8
         NGINX_VERSION: 1-alpine
+    ports:
+      - "127.0.0.1:80:80"
     depends_on:
       - python
     networks:
@@ -206,6 +208,7 @@ services:
     image: redis:alpine
     networks:
       - db
+
 
   celery:
     command: celery -A door_commander worker -l info
