@@ -348,7 +348,7 @@ with atomic_globals:
     # ic(dict(os.environ))
     OIDC_RP_CLIENT_ID = os.environ['OIDC_RP_CLIENT_ID']
     # TODO configuration option
-    OIDC_OP_JWKS_ENDPOINT = "http://keycloak.nginx_door_commander_external:8080/auth/realms/ZAM/protocol/openid-connect/certs"
+    OIDC_OP_JWKS_ENDPOINT = "http://keycloak_bv.nginx_door_commander_external:8080/realms/ZAM/protocol/openid-connect/certs"
 
     OIDC_RP_CLIENT_SECRET = os.environ['OIDC_RP_CLIENT_SECRET']
     OIDC_RENEW_ID_TOKEN_EXPIRY_SECONDS = 60 * 15

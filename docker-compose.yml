@@ -79,6 +79,7 @@ services:
     networks:
       - web
       - mqtt
+      - inventory_management
     ports:
       - "127.0.0.1:8082:80" # with nginx SSL reverse proxy
     restart: unless-stopped
@@ -228,6 +229,9 @@ networks:
   web: # nginx <--> django
     external:
       name: nginx_door_commander_external
+  inventory_management:
+    external:
+      name: nginx_inventory_management_external
 
 volumes:
   door-commander-python-data:
