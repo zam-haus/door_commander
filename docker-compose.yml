@@ -5,69 +5,6 @@
 version: "3.4"
 services:
 
-
-  opal-server:
-    entrypoint: [ "echo", "Service disabled" ]
-    image: authorizon/opal-server:0.1.11
-    ports: []
-    #  - 7002
-    environment:
-      # Only 1 to avoid requiring a broadcast server (currently: pgsql, redis, kafka)
-      # UVICORN_NUM_WORKERS: 1
-      OPAL_POLICY_REPO_URL: "git@github.com:phi1010/zam-door-opa-policy.git"
-      # The passed value must be the contents of the SSH key in one line (replace new-line with underscore, i.e: \n with _)
-      # OPAL_POLICY_REPO_CLONE_PATH:
-      OPAL_POLICY_REPO_MAIN_BRANCH: main
-      # OPAL_POLICY_REPO_MAIN_REMOTE: origin
-      OPAL_POLICY_REPO_POLLING_INTERVAL: 10
-      # OPAL_DATA_CONFIG_SOURCES:
-      #   # language=json
-      #   '{
-      #       "config": {
-      #         "entries": [
-      #           {
-      #             "url": "https://api.authorizon.com/v1/policy-config",
-      #             "topics": [
-      #               "policy_data"
-      #             ],
-      #             "config": {
-      #               "headers": {
-      #                 "Authorization": "Bearer FAKE-SECRET"
-      #               }
-      #             }
-      #           }
-      #         ]
-      #       }
-      #     }'
-      OPAL_AUTH_PRIVATE_KEY:
-      OPAL_AUTH_PUBLIC_KEY:
-      OPAL_POLICY_REPO_SSH_KEY: "${OPAL_GIT_PRIVATE_KEY}"
-      OPAL_AUTH_MASTER_TOKEN:
-      # there are no https certificates, thus the security against attacks from other containers is weak.
-    volumes:
-      - "./opa/policy:/mnt/policy/:ro"
-    networks:
-      - opal
-
-
-  opa-sidecar:
-    entrypoint: [ "echo", "Service disabled" ]
-    depends_on:
-      - opal-server
-    image: authorizon/opal-client:0.1.11
-    ports: []
-      # - "127.0.0.1:7000:7000" # OPAL client healthcheck # TODO VULN disable
-      # here one can query http://localhost:8181/v1/data/app/door_commander/physical_access/allow
-      # WARNING: EVERYONE WHO CAN ACCESS THIS PORT CAN CHANGE ACCESS POLICIES AND DATA
-      # - "127.0.0.1:8181:8181" # OPA # TODO VULN disable
-    environment:
-      OPAL_CLIENT_TOKEN: "${OPAL_AUTH_CLIENT_TOKEN}"
-      OPAL_SERVER_URL: http://opal-server:7002
-    networks:
-      - opal
-      - opa
-
-
   mqtt:
     image: eclipse-mosquitto
     volumes:
