@@ -7,7 +7,7 @@
             font: sans-serif;
         }
 
-        button, input {
+        button, input, .box {
             border: none;
             color: white;
             padding: 15px 32px;
@@ -34,7 +34,10 @@
         .login {
             background-color: SlateBlue;
         }
-    </style
+        .admin {
+            background-color: SlateBlue;
+        }
+    </style>
 {% endblock %}
 {% block body %}
     {% if request.user.is_authenticated %}
@@ -76,6 +79,13 @@
                 <input class="logout" type="submit" value="Logout">
             </form>
         </div>
+        {% if request.user.is_staff %}
+            <div>
+                <form action="{{ url('admin:index') }}" method="get">
+                    <input class="admin" type="submit" value="Admin Interface">
+                </form>
+            </div>
+        {% endif %}
     {% else %}
         <div>
             <form action="{{ url('oidc_authentication_init') }}" method="get">
@@ -95,9 +105,6 @@
             </div>
             {% if request.user.has_usable_password() %}
                 <div><a href="{{ url("password_change") }}">Change Password</a></div>
-            {% endif %}
-            {% if request.user.is_staff %}
-                <div><a href="{{ url("admin:index") }}">Admin Interface</a></div>
             {% endif %}
         {% else %}
             {% if oidc_active %}
