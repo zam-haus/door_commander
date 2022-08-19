@@ -3,7 +3,7 @@
 # system.authz as follows:
 package system.authz
 
-default allow := false  # Reject requests by default.
+default allow = false  # Reject requests by default.
 
 allow {
   opa.runtime().env.OPA_BEARER_TOKEN == input.identity
