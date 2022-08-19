@@ -128,7 +128,7 @@ services:
 
   opa:
     # TODO =basic
-    command: run --server --addr :8181 --authentication=token --authorization=off -c /data/config.yaml /data/policy
+    command: run --server --addr :8181 --authentication=token --authorization=basic -c /data/config.yaml /data/policy
     environment:
       OPA_BEARER_TOKEN: '${OPA_BEARER_TOKEN}'
     image: openpolicyagent/opa

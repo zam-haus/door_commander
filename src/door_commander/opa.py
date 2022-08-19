@@ -22,7 +22,7 @@ def get_query_result(query, function):
         token = settings.OPA_BEARER_TOKEN
         input = create_default_input(function)
         payload = dict(input=input, query=query)
-        response = requests.post(url + "/v1/query", json=input)
+        response = requests.post(url + "/v1/query", json=input, headers=get_auth_header())
 
         if response.status_code != 200:
             raise Exception("Auth failed")
@@ -31,6 +31,10 @@ def get_query_result(query, function):
         result = result_wrapper["result"]
     except:
         raise Exception("Auth check failed")
+
+
+def get_auth_header():
+    return dict(Authorization="Bearer " + settings.OPA_BEARER_TOKEN)
 
 
 def get_allowed_result(path, function, key="allow"):
@@ -65,13 +69,13 @@ def get_data_result(path, function):
         token = settings.OPA_BEARER_TOKEN
         input = dict(input=create_default_input(function))
         # Normalize the URL, OPA uses problematic redirects https://github.com/open-policy-agent/opa/issues/2137
-        url:str
+        url: str
         fullurl = url \
-                  + ("" if url.endswith("/") else "/" ) \
+                  + ("" if url.endswith("/") else "/") \
                   + "v1/data" \
                   + ("" if path.startswith("/") else "/") \
                   + path
-        response = requests.post(fullurl, json=input)
+        response = requests.post(fullurl, json=input, headers=get_auth_header())
 
         if response.status_code != 200:
             raise Exception("Auth failed")
