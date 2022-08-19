@@ -154,8 +154,6 @@ services:
     networks:
       - web
     restart: unless-stopped
-    ports:
-      - "127.0.0.1:80:80"
 
   redis:
     # this redis has no authentication.
