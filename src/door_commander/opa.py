@@ -77,7 +77,7 @@ def get_data_result(path, function):
             raise Exception("Auth failed")
 
         result = response.json()
-        log.setLevel(logging.DEBUG)
+        # log.setLevel(logging.DEBUG)
         log.debug("Return authorization result %s", ic.format(path, input, result))
         return result['result']
     except:
