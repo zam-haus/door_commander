@@ -34,6 +34,7 @@
         .login {
             background-color: SlateBlue;
         }
+
         .admin {
             background-color: SlateBlue;
         }
@@ -42,37 +43,40 @@
 {% block body %}
     {% if request.user.is_authenticated %}
         <h2>Hallo, {{ request.user.display_name }}!</h2>
-        {% if can_open_door %}
-            {% if not has_allowed_location %}
-                <div>
-                    T&uuml;ren lassesn sich nur aus dem ZAM WLAN &ouml;ffnen!<br/>
-                    WLAN: ZAM, Kennwort: MachWas!<br/>
-                    (diese Nachricht verschwindet, wenn du im richtigen WLAN bist)
-                </div>
+    {% endif %}
+    {% if show_location_hint %}
+        <div>
+            T&uuml;ren lassesn sich nur aus dem ZAM WLAN &ouml;ffnen!<br/>
+            WLAN: ZAM, Kennwort: MachWas!<br/>
+            (diese Nachricht verschwindet, wenn du im richtigen WLAN bist)
+        </div>
+    {% endif %}
+    <div>
+        {% for door in doors %}
+            {% if can_open_doors[door] %}
+                <form action="{{ url("open", kwargs=dict(door_id=door.id)) }}" method="post">
+                    {{ csrf_input }}
+                    <button type="submit" class="open">{{ door.display_name }} &ouml;ffnen!</button>
+                </form>
             {% endif %}
-            <div>
-                {% for (door_id, display_name) in doors.items() %}
-                    <form action="{{ url("open", kwargs=dict(door_id=door_id)) }}" method="post">
-                        {{ csrf_input }}
-                        <button type="submit" class="open">{{ display_name }} &ouml;ffnen!</button>
-                    </form>
-                {% endfor %}
-            </div>
-        {% endif %}
-        <ul>
-            {% for (display_name, status) in doors_status %}
-                <li>
-                    <b>{{ display_name }}</b>
-                    {% if status == True %}
-                        ist <span style="color: MediumSeaGreen;">offen</span>
-                    {% elif status == False %}
-                        ist <span style="color: Tomato;">geschlossen</span>
-                    {% else %}
-                        ist in einem unbekannten Zustand"
-                    {% endif %}
-                </li>
-            {% endfor %}
-        </ul>
+        {% endfor %}
+    </div>
+    <ul>
+        {% for (display_name, status) in doors_status %}
+            <li>
+                <b>{{ display_name }}</b>
+                {% if status == True %}
+                    ist <span style="color: MediumSeaGreen;">offen</span>
+                {% elif status == False %}
+                    ist <span style="color: Tomato;">geschlossen</span>
+                {% else %}
+                    ist in einem unbekannten Zustand"
+                {% endif %}
+            </li>
+        {% endfor %}
+    </ul>
+
+    {% if request.user.is_authenticated %}
         <div>
             <form action="{{ url('oidc_logout') if oidc_active else url('logout') }}" method="post">
                 {{ csrf_input }}
@@ -86,40 +90,29 @@
                 </form>
             </div>
         {% endif %}
+        {% if request.user.has_usable_password() %}
+            <div>
+                <form action="{{ url('password_change') }}" method="get">
+                    <input class="admin" type="submit" value="Change Password">
+                </form></div>
+        {% endif %}
     {% else %}
         <div>
-            <form action="{{ url('oidc_authentication_init') }}" method="get">
-                <input class="login" type="submit" value="Login">
-            </form>
+            {% if oidc_active %}
+                <form action="{{ url('oidc_authentication_init') }}" method="get">
+                    <input class="login" type="submit" value="Login">
+                </form>
+            {% else %}
+                <form action="{{ url('login') }}" method="get">
+                    <input class="login" type="submit" value="Local Login">
+                </form>
+                <form action="{{ url('password_reset') }}" method="get">
+                    <input class="login" type="submit" value="Local Password Reset">
+                </form>
+            {% endif %}
         </div>
     {% endif %}
     {#
-    <h2>Navigation:</h2>
-    <div>
-        {% if request.user.is_authenticated %}
-            <div>
-                <form action="{{ url('oidc_logout') if oidc_active else url('logout') }}" method="post">
-                    {{ csrf_input }}
-                    <input type="submit" value="logout">
-                </form>
-            </div>
-            {% if request.user.has_usable_password() %}
-                <div><a href="{{ url("password_change") }}">Change Password</a></div>
-            {% endif %}
-        {% else %}
-            {% if oidc_active %}
-                <div><a href="{{ url('oidc_authentication_init') }}">Login</a></div>
-                <div><a href="{{ url('login') }}">Local Login</a></div>
-            {% else %}
-                <div><a href="{{ url('login') }}">Login</a></div>
-            {% endif %}
-
-            <div>
-                <a href="{{ url("password_reset") }}">Reset Local Password</a>
-            </div>
-        {% endif %}
-    </div>
-    <hr>
     <h2>Your data:</h2>
     <div><span>Logged in: </span><span>{{ request.user.is_authenticated }}</span></div>
     {% if request.user.is_authenticated %}
@@ -147,36 +140,5 @@
     {% endif %}
 
 
-    <hr>
-    <h2>Doors' status:</h2>
-    <ul>
-        {% for (display_name, status) in doors_status %}
-            <li>
-                <b>Door <i>{{ display_name }}</i>:</b>
-                {{ "Unknown" if status is none }}
-                {{ "Open" if status == True }}
-                {{ "Closed" if status == False }}
-            </li>
-        {% endfor %}
-    </ul>
-    <hr>
-    <h2>Your actions:</h2>
-    {% if can_open_door %}
-        {% if not has_allowed_location %}
-            <div>
-                T&uuml;ren lassesn sich nur aus dem ZAM WLAN &ouml;ffnen!<br/>
-	        WLAN: ZAM, Kennwort: MachWas!<br/>
-	        (diese Nachricht verschwindet, wenn du im richtigen WLAN bist)
-            </div>
-	{% endif %}
-        <div>
-            {% for (door_id, display_name) in doors.items() %}
-                <form action="{{ url("open", kwargs=dict(door_id=door_id)) }}" method="post">
-                    {{ csrf_input }}
-                    <button type="submit">Open {{ display_name }}</button>
-                </form>
-            {% endfor %}
-        </div>
-    {% endif %}
 #}
 {% endblock %}
