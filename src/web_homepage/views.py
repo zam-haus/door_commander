@@ -118,11 +118,11 @@ def get_location_info(request):
 
 
 @require_POST  # for CSRF protection
-@login_required
-@permission_required(PERMISSION_OPEN_DOOR)  # this is just a safeguard, there are more requirements.
 def open(request, door_id):
+
     if not check_can_open_door(request, Door.objects.get(pk=door_id)):
         raise PermissionDenied("You are not allowed to open the door.")
+
     if check_location_hint(request):
         messages.error(request, "You are in the wrong location. Consider joining the ZAM Wi-Fi.")
         return redirect(home)
