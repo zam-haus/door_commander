@@ -121,9 +121,9 @@ def get_location_info(request):
 @login_required
 @permission_required(PERMISSION_OPEN_DOOR)  # this is just a safeguard, there are more requirements.
 def open(request, door_id):
-    if not check_can_open_door(request):
+    if not check_can_open_door(request, Door.objects.get(pk=door_id)):
         raise PermissionDenied("You are not allowed to open the door.")
-    if not check_has_allowed_location(request)[0]:
+    if check_location_hint(request):
         messages.error(request, "You are in the wrong location. Consider joining the ZAM Wi-Fi.")
         return redirect(home)
 
