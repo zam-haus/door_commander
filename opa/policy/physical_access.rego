@@ -29,7 +29,9 @@ allow_open {
 
 
 door_role_mapping = {
-    "1fbad315-125d-4ba7-ba6c-cfbfb1b3b834" : ["MayOpenFrontDoor"],
+    "D6545C11-CC5A-421E-9D7D-0B2F762C6282" : ["MayOpenFrontDoor"],
+    "ED9AE67F-0779-4248-AE46-0167791A73AF" : ["MayOpenNordUG"],
+    "C840743E-F562-4DAC-8AEE-0622F000DCCF" : ["MayOpenNordEG"],
 }
 
 allow_member_open {

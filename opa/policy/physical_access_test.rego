@@ -11,7 +11,7 @@ test_allow_by_role {
             "door": {
               "fields": {
                 "display_name": "Some Door",
-                "mqtt_id": "1fbad315-125d-4ba7-ba6c-cfbfb1b3b834"
+                "mqtt_id": "D6545C11-CC5A-421E-9D7D-0B2F762C6282"
               },
               "model": "doors.door",
               "pk": "xxxx-xxxx-xxxx-xxxx-xxxx"
@@ -108,6 +108,12 @@ test_allow_by_role {
 }
 
 
+
+test_no_input {
+    not allow_member_open with input as {}
+}
+
+
 test_deny_wrong_door {
     not allow_member_open with input as {
           "action": "open",
@@ -115,7 +121,7 @@ test_deny_wrong_door {
             "door": {
               "fields": {
                 "display_name": "Some Door",
-                "mqtt_id": "1fbad315-125d-4ba7-xxxx-cfbfb1b3b834"
+                "mqtt_id": "D6545C11-CC5A-421E-XXXX-0B2F762C6282"
               },
               "model": "doors.door",
               "pk": "xxxx-xxxx-xxxx-xxxx-xxxx"
@@ -219,7 +225,7 @@ test_deny_wrong_role {
             "door": {
               "fields": {
                 "display_name": "Some Door",
-                "mqtt_id": "1fbad315-125d-4ba7-ba6c-cfbfb1b3b834"
+                "mqtt_id": "D6545C11-CC5A-421E-9D7D-0B2F762C6282"
               },
               "model": "doors.door",
               "pk": "xxxx-xxxx-xxxx-xxxx-xxxx"
@@ -321,7 +327,7 @@ test_deny_wrong_location {
             "door": {
               "fields": {
                 "display_name": "Some Door",
-                "mqtt_id": "1fbad315-125d-4ba7-ba6c-cfbfb1b3b834"
+                "mqtt_id": "D6545C11-CC5A-421E-9D7D-0B2F762C6282"
               },
               "model": "doors.door",
               "pk": "xxxx-xxxx-xxxx-xxxx-xxxx"
