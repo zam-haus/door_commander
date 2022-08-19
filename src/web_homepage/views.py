@@ -121,11 +121,13 @@ def get_location_info(request):
 def open(request, door_id):
 
     if not check_can_open_door(request, Door.objects.get(pk=door_id)):
+
+        if check_location_hint(request):
+            messages.error(request, "You are in the wrong location. Consider joining the ZAM Wi-Fi.")
+            return redirect(home)
+
         raise PermissionDenied("You are not allowed to open the door.")
 
-    if check_location_hint(request):
-        messages.error(request, "You are in the wrong location. Consider joining the ZAM Wi-Fi.")
-        return redirect(home)
 
     assert door_commander_mqtt
     door = Door.objects.get(pk=door_id)

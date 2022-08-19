@@ -15,6 +15,7 @@ allow {
 default show_location_hint = false
 show_location_hint {
     input.user.authenticated
+    not is_on_site
 }
 
 
@@ -32,7 +33,15 @@ door_role_mapping = {
 }
 
 allow_member_open {
+    is_on_site
+    member_is_authorized
+}
+
+is_on_site {
     input.user.location.locator_status[_][_] == true
+}
+
+member_is_authorized {
     connection = input.user.user_connections[_]
     connection.fields.directory = "3a01ea23-4a7f-4c64-adce-02411cd0a480" # directory id from django admin interface
     role_name = connection.fields.latest_directory_data.resource_access["sesam.zam.haus"].roles[_]
