@@ -48,6 +48,8 @@ services:
       - redis
     environment:
       &python-environment
+      OPA_BEARER_TOKEN: '${OPA_BEARER_TOKEN}'
+      OPA_URL: "http://opa:8181/"
       OIDC_RP_CLIENT_ID:
       OIDC_RP_CLIENT_SECRET:
       OIDC_OP_LOGOUT_URL:
@@ -103,6 +105,7 @@ services:
       - "door-commander-python-data:/opt/door-commander.betreiberverein.de/data"
     networks:
       - db
+      - opa
       - web
       - mqtt
     ports: []
@@ -121,6 +124,22 @@ services:
       - db
     networks:
       - db
+      - opa
+
+  opa:
+    # TODO =basic
+    command: run --server --addr :8181 --authentication=token --authorization=basic -c /data/config.yaml /data/policy
+    environment:
+      OPA_BEARER_TOKEN: '${OPA_BEARER_TOKEN}'
+    image: openpolicyagent/opa
+    networks:
+      - opa
+    ports: []
+      #- "127.0.0.1:8181:8181"
+    volumes:
+      - ./opa/:/data/:ro
+      - opa-persistence:/var/opa/
+
 
   nginx:
     build:
@@ -162,11 +181,12 @@ networks:
   mqtt: # mosquitto <--> django
   db: # psql <--> django
   web: # nginx <--> django
-    external:
-      name: nginx_door_commander_external
+    #external:
+    #  name: nginx_door_commander_external
   inventory_management:
-    external:
-      name: nginx_inventory_management_external
+    #external:
+    #  name: nginx_inventory_management_external
+  opa: #
 
 volumes:
   door-commander-python-data:
@@ -174,3 +194,4 @@ volumes:
   door-commander-mosquitto-data:
   door-commander-mosquitto-log:
   celery-beat-schedule:
+  opa-persistence:

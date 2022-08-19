@@ -1,214 +1,424 @@
 package app.door_commander.physical_access
 
-ldap := {
-	"uid=some.admin,ou=users,dc=betreiberverein,dc=de": {
-		"dn": ["uid=some.admin,ou=users,dc=betreiberverein,dc=de"],
-		"container": ["ou=users,dc=betreiberverein,dc=de"],
-		"entryUUID": ["some.admin.uuid"],
-		"objectclass": ["inetOrgPerson"],
-	},
-	"uid=some.member,ou=users,dc=betreiberverein,dc=de": {
-		"dn": ["uid=some.member,ou=users,dc=betreiberverein,dc=de"],
-		"container": ["ou=users,dc=betreiberverein,dc=de"],
-		"entryUUID": ["some.member.uuid"],
-		"objectclass": ["inetOrgPerson"],
-	},
-	"cn=admin,ou=groups,dc=betreiberverein,dc=de": {
-		"dn": ["cn=admin,ou=groups,dc=betreiberverein,dc=de"],
-		"container": ["ou=groups,dc=betreiberverein,dc=de"],
-		"objectclass": ["groupOfUniqueNames"],
-		"cn": ["admins"],
-		"entryUUID": ["admins.uuid"],
-		"uniquemember": ["uid=some.admin,ou=users,dc=betreiberverein,dc=de"],
-	},
-	"cn=mitglied,ou=groups,dc=betreiberverein,dc=de": {
-		"dn": ["cn=mitglied,ou=groups,dc=betreiberverein,dc=de"],
-		"container": ["ou=groups,dc=betreiberverein,dc=de"],
-		"objectclass": ["groupOfUniqueNames"],
-		"cn": ["members"],
-		"entryUUID": ["members.uuid"],
-		"uniquemember": [
-			"uid=some.member,ou=users,dc=betreiberverein,dc=de",
-			"cn=admin,ou=groups,dc=betreiberverein,dc=de",
-		],
-	},
+#import future.keywords
+
+
+
+test_allow_by_role {
+    allow_member_open with input as {
+          "action": "open",
+          "door": {
+            "door": {
+              "fields": {
+                "display_name": "Some Door",
+                "mqtt_id": "D6545C11-CC5A-421E-9D7D-0B2F762C6282"
+              },
+              "model": "doors.door",
+              "pk": "xxxx-xxxx-xxxx-xxxx-xxxx"
+            }
+          },
+          "user": {
+            "authenticated": true,
+            "location": {
+              "ip": "62.245.152.84",
+              "locator_status": {
+                "xxxx-xxxx-xxxx-xxxx-xxxx": [
+                  true
+                ]
+              },
+              "permitted_networks_status": {
+                "192.168.0.0/24": false
+              }
+            },
+            "user": {
+              "fields": {
+                "date_joined": "2021-09-24T22:28:49.495Z",
+                "display_name": "xxx",
+                "email": "xxxx@example.com",
+                "full_name": "xxxx xxxx",
+                "groups": [],
+                "is_active": true,
+                "is_staff": true,
+                "is_superuser": true,
+                "last_login": "2022-08-19T14:06:23.165Z",
+                "password": "xxxx",
+                "password_last_changed": "2021-09-24T22:28:49.749Z",
+                "user_permissions": [
+                  43
+                ],
+                "username": "xxxx"
+              },
+              "model": "accounts.user",
+              "pk": "xxxx-xxxx-xxxx-xxxx-xxxx"
+            },
+            "user_connections": [
+              {
+                "fields": {
+                  "directory": "3a01ea23-4a7f-4c64-adce-02411cd0a480",
+                  "directory_key": "xxxx-xxxx-xxxx-xxxx-xxxx",
+                  "latest_directory_data": {
+                    "email": "xxxx@example.com",
+                    "email_verified": true,
+                    "family_name": "xxxx",
+                    "given_name": "xxxx",
+                    "ldap_id": "xxxx-xxxx-xxxx-xxxx-xxxx",
+                    "name": "xxxx xxxx",
+                    "preferred_username": "xxxx",
+                    "resource_access": {
+                      "account": {
+                        "roles": [
+                          "manage-account",
+                          "manage-account-links",
+                          "view-profile"
+                        ]
+                      },
+                      "https://wiki.betreiberverein.de/saml2/metadata": {
+                        "roles": [
+                          "Editor"
+                        ]
+                      },
+                      "sesam.zam.haus": {
+                        "roles": [
+                          "MayOpenFrontDoor",
+                          "MayOpenNordUG"
+                        ]
+                      }
+                    },
+                    "sub": "xxxx-xxxx-xxxx-xxxx-xxxx"
+                  },
+                  "user": "xxxx-xxxx-xxxx-xxxx-xxxx"
+                },
+                "model": "accounts.userconnection",
+                "pk": "xxxx-xxxx-xxxx-xxxx-xxxx"
+              }
+            ],
+            "user_permissions": [
+              {
+                "fields": {
+                  "codename": "open_door",
+                  "content_type": 6,
+                  "name": "Can open any door"
+                },
+                "model": "auth.permission",
+                "pk": 43
+              }
+            ]
+          }
+        }
 }
 
-test_allow_django_superuser {
-	input := {
-		"action": {"open": {"door": {"id": "door7"}}},
-		"user": {
-			"uuid": "local django user",
-			"username": "superuser",
-			"django_permissions": ["superuser"],
-		},
-	}
 
-	time_val := time.parse_ns("2006-01-02T15:04:05Z07:00", "2021-07-22T16:00:00+02:00")
-	allow with data.ldap as ldap with input as input
-	allow_django_superuser with data.ldap as ldap with input as input
-	not allow_member_open with data.ldap as ldap with input as input
-	not allow_member_reopen with data.ldap as ldap with input as input
-	not allow_admin_open with data.ldap as ldap with input as input
+
+test_no_input {
+    not allow_member_open with input as {}
 }
 
-test_not_allow_django_superuser {
-	input := {
-		"action": {"open": {"door": {"id": "door7"}}},
-		"user": {
-			"uuid": "local django user",
-			"username": "superuser",
-			"django_permissions": [],
-		},
-	}
 
-	not allow_django_superuser with data.ldap as ldap with input as input
+test_deny_wrong_door {
+    not allow_member_open with input as {
+          "action": "open",
+          "door": {
+            "door": {
+              "fields": {
+                "display_name": "Some Door",
+                "mqtt_id": "D6545C11-CC5A-421E-XXXX-0B2F762C6282"
+              },
+              "model": "doors.door",
+              "pk": "xxxx-xxxx-xxxx-xxxx-xxxx"
+            }
+          },
+          "user": {
+            "authenticated": true,
+            "location": {
+              "ip": "62.245.152.84",
+              "locator_status": {
+                "xxxx-xxxx-xxxx-xxxx-xxxx": [
+                  true
+                ]
+              },
+              "permitted_networks_status": {
+                "192.168.0.0/24": false
+              }
+            },
+            "user": {
+              "fields": {
+                "date_joined": "2021-09-24T22:28:49.495Z",
+                "display_name": "xxx",
+                "email": "xxxx@example.com",
+                "full_name": "xxxx xxxx",
+                "groups": [],
+                "is_active": true,
+                "is_staff": true,
+                "is_superuser": true,
+                "last_login": "2022-08-19T14:06:23.165Z",
+                "password": "xxxx",
+                "password_last_changed": "2021-09-24T22:28:49.749Z",
+                "user_permissions": [
+                  43
+                ],
+                "username": "xxxx"
+              },
+              "model": "accounts.user",
+              "pk": "xxxx-xxxx-xxxx-xxxx-xxxx"
+            },
+            "user_connections": [
+              {
+                "fields": {
+                  "directory": "3a01ea23-4a7f-4c64-adce-02411cd0a480",
+                  "directory_key": "xxxx-xxxx-xxxx-xxxx-xxxx",
+                  "latest_directory_data": {
+                    "email": "xxxx@example.com",
+                    "email_verified": true,
+                    "family_name": "xxxx",
+                    "given_name": "xxxx",
+                    "ldap_id": "xxxx-xxxx-xxxx-xxxx-xxxx",
+                    "name": "xxxx xxxx",
+                    "preferred_username": "xxxx",
+                    "resource_access": {
+                      "account": {
+                        "roles": [
+                          "manage-account",
+                          "manage-account-links",
+                          "view-profile"
+                        ]
+                      },
+                      "https://wiki.betreiberverein.de/saml2/metadata": {
+                        "roles": [
+                          "Editor"
+                        ]
+                      },
+                      "sesam.zam.haus": {
+                        "roles": [
+                          "MayOpenFrontDoor",
+                          "MayOpenNordUG"
+                        ]
+                      }
+                    },
+                    "sub": "xxxx-xxxx-xxxx-xxxx-xxxx"
+                  },
+                  "user": "xxxx-xxxx-xxxx-xxxx-xxxx"
+                },
+                "model": "accounts.userconnection",
+                "pk": "xxxx-xxxx-xxxx-xxxx-xxxx"
+              }
+            ],
+            "user_permissions": [
+              {
+                "fields": {
+                  "codename": "open_door",
+                  "content_type": 6,
+                  "name": "Can open any door"
+                },
+                "model": "auth.permission",
+                "pk": 43
+              }
+            ]
+          }
+        }
 }
 
-test_allow_member_open {
-	input := {
-		"action": {"open": {"door": {"id": "door7"}}},
-		"user": {"uuid": "some.member.uuid"},
-		"request": {"ip": "192.168.13.37"},
-	}
 
-	time_val := time.parse_ns("2006-01-02T15:04:05Z07:00", "2021-07-22T16:00:00+02:00")
-	allow with data.ldap as ldap with input as input with current_time as time_val
-	allow_member_open with data.ldap as ldap with input as input with current_time as time_val
+test_deny_wrong_role {
+    not allow_member_open with input as {
+          "action": "open",
+          "door": {
+            "door": {
+              "fields": {
+                "display_name": "Some Door",
+                "mqtt_id": "D6545C11-CC5A-421E-9D7D-0B2F762C6282"
+              },
+              "model": "doors.door",
+              "pk": "xxxx-xxxx-xxxx-xxxx-xxxx"
+            }
+          },
+          "user": {
+            "authenticated": true,
+            "location": {
+              "ip": "62.245.152.84",
+              "locator_status": {
+                "xxxx-xxxx-xxxx-xxxx-xxxx": [
+                  true
+                ]
+              },
+              "permitted_networks_status": {
+                "192.168.0.0/24": false
+              }
+            },
+            "user": {
+              "fields": {
+                "date_joined": "2021-09-24T22:28:49.495Z",
+                "display_name": "xxx",
+                "email": "xxxx@example.com",
+                "full_name": "xxxx xxxx",
+                "groups": [],
+                "is_active": true,
+                "is_staff": true,
+                "is_superuser": true,
+                "last_login": "2022-08-19T14:06:23.165Z",
+                "password": "xxxx",
+                "password_last_changed": "2021-09-24T22:28:49.749Z",
+                "user_permissions": [
+                  43
+                ],
+                "username": "xxxx"
+              },
+              "model": "accounts.user",
+              "pk": "xxxx-xxxx-xxxx-xxxx-xxxx"
+            },
+            "user_connections": [
+              {
+                "fields": {
+                  "directory": "3a01ea23-4a7f-4c64-adce-02411cd0a480",
+                  "directory_key": "xxxx-xxxx-xxxx-xxxx-xxxx",
+                  "latest_directory_data": {
+                    "email": "xxxx@example.com",
+                    "email_verified": true,
+                    "family_name": "xxxx",
+                    "given_name": "xxxx",
+                    "ldap_id": "xxxx-xxxx-xxxx-xxxx-xxxx",
+                    "name": "xxxx xxxx",
+                    "preferred_username": "xxxx",
+                    "resource_access": {
+                      "account": {
+                        "roles": [
+                          "manage-account",
+                          "manage-account-links",
+                          "view-profile"
+                        ]
+                      },
+                      "https://wiki.betreiberverein.de/saml2/metadata": {
+                        "roles": [
+                          "Editor"
+                        ]
+                      },
+                      "sesam.zam.haus": {
+                        "roles": [
+                          "MayOpenNordUG"
+                        ]
+                      }
+                    },
+                    "sub": "xxxx-xxxx-xxxx-xxxx-xxxx"
+                  },
+                  "user": "xxxx-xxxx-xxxx-xxxx-xxxx"
+                },
+                "model": "accounts.userconnection",
+                "pk": "xxxx-xxxx-xxxx-xxxx-xxxx"
+              }
+            ],
+            "user_permissions": [
+              {
+                "fields": {
+                  "codename": "open_door",
+                  "content_type": 6,
+                  "name": "Can open any door"
+                },
+                "model": "auth.permission",
+                "pk": 43
+              }
+            ]
+          }
+        }
 }
 
-test_allow_member_open_2 {
-	input := {
-		"action": {"open": {"door": {"id": "door7"}}},
-		"user": {"uuid": "some.member.uuid"},
-		"request": {"ip": "127.0.0.1"},
-	}
-
-	time_val := time.parse_ns("2006-01-02T15:04:05Z07:00", "2021-07-22T16:00:00+02:00")
-	allow with data.ldap as ldap with input as input with current_time as time_val
-	allow_member_open with data.ldap as ldap with input as input with current_time as time_val
-}
-test_allow_member_open_3 {
-	input := {
-		"action": {"open": {"door": {"id": "door7"}}},
-		"user": {"uuid": "some.member.uuid"},
-		"request": {"ip": "::1"},
-	}
-
-	time_val := time.parse_ns("2006-01-02T15:04:05Z07:00", "2021-07-22T16:00:00+02:00")
-	allow with data.ldap as ldap with input as input with current_time as time_val
-	allow_member_open with data.ldap as ldap with input as input with current_time as time_val
-}
-
-test_not_allow_member_open_1 {
-	input := {
-		"action": {"open": {"door": {"id": "door7"}}},
-		"user": {"uuid": "some.member.uuid"},
-		"request": {"ip": "192.168.13.37"},
-	}
-
-    # wrong time
-	time_val := time.parse_ns("2006-01-02T15:04:05Z07:00", "2021-07-22T23:59:00+02:00")
-	not allow_member_open with data.ldap as ldap with input as input with current_time as time_val
-}
-test_not_allow_member_open_2 {
-	input := {
-		"action": {"open": {"door": {"id": "door7"}}},
-		"user": {"uuid": "some.member.uuid"},
-		# wrong address
-		"request": {"ip": "1.2.3.4"},
-	}
-
-	time_val := time.parse_ns("2006-01-02T15:04:05Z07:00", "2021-07-22T16:00:00+02:00")
-	not allow_member_open with data.ldap as ldap with input as input with current_time as time_val
-}
-
-test_allow_admin_open {
-	input := {
-		"action": {"open": {"door": {"id": "door7"}}},
-		"user": {"uuid": "some.admin.uuid"},
-	}
-
-	time_val := time.parse_ns("2006-01-02T15:04:05Z07:00", "2021-07-22T23:59:00+02:00")
-	allow with data.ldap as ldap with input as input with current_time as time_val
-	allow_admin_open with data.ldap as ldap with input as input with current_time as time_val
-}
-
-test_allow_reopen {
-	input := {
-		"action": {"open": {"door": {"id": "door7"}}},
-		"user": {"uuid": "some.member.uuid"},
-		"request": {"ip": "192.168.13.37"},
-	}
-
-	LAYOUT := "2006-01-02T15:04:05Z07:00"
-
-	time_val := time.parse_ns(LAYOUT, "2021-07-22T20:28:00+02:00")
-	last_open := {"door7": time_val - time.parse_duration_ns("3m")}
-
-	allow with data.ldap as ldap with input as input with current_time as time_val with data.last_open as last_open
-	allow_member_reopen with data.ldap as ldap with input as input with current_time as time_val with data.last_open as last_open
-}
-
-test_not_allow_reopen_1 {
-	input := {
-		"action": {"open": {"door": {"id": "door7"}}},
-		"user": {"uuid": "some.member.uuid"},
-		"request": {"ip": "192.168.13.37"},
-	}
-
-	LAYOUT := "2006-01-02T15:04:05Z07:00"
-
-	time_val := time.parse_ns(LAYOUT, "2021-07-22T20:28:00+02:00")
-	last_open := {"door7": time_val - time.parse_duration_ns("3h")} # door was not recently open
-
-	not allow_member_reopen with data.ldap as ldap with input as input with current_time as time_val with data.last_open as last_open
-}
-
-test_not_allow_reopen_2 {
-	input := {
-		"action": {"open": {"door": {"id": "door7"}}},
-		"user": {"uuid": "some.member.uuid"},
-		"request": {"ip": "192.168.13.37"},
-	}
-
-	LAYOUT := "2006-01-02T15:04:05Z07:00"
-
-	# too late after opening hours
-	time_val := time.parse_ns(LAYOUT, "2021-07-22T20:32:00+02:00")
-	last_open := {"door7": time_val - time.parse_duration_ns("3m")}
-
-	not allow_member_reopen with data.ldap as ldap with input as input with current_time as time_val with data.last_open as last_open
-}
-
-test_not_allow_reopen_3 {
-	input := {
-		"action": {"open": {"door": {"id": "door7"}}},
-		# not allowed
-		"user": {"uuid": "nope"},
-		"request": {"ip": "192.168.13.37"},
-	}
-
-	LAYOUT := "2006-01-02T15:04:05Z07:00"
-
-	time_val := time.parse_ns(LAYOUT, "2021-07-22T20:28:00+02:00")
-	last_open := {"door7": time_val - time.parse_duration_ns("3m")}
-
-	not allow_member_reopen with data.ldap as ldap with input as input with current_time as time_val with data.last_open as last_open
-}
-
-# check that there is at least one szenario where someone is disallowed by all means.
-test_not_allow {
-	input := {
-		"action": {"open": {"door": {"id": "door7"}}},
-		"user": {"uuid": "", "django_permissions": ["foobar"]},
-		"request": {"ip": "192.168.13.37"},
-	}
-
-	LAYOUT := "2006-01-02T15:04:05Z07:00"
-
-	time_val := time.parse_ns(LAYOUT, "2021-07-22T20:28:00+02:00")
-	last_open := {"door7": time_val - time.parse_duration_ns("40m")}
-
-	not allow with data.ldap as ldap with input as input with current_time as time_val with data.last_open as last_open
+test_deny_wrong_location {
+    not allow_member_open with input as {
+          "action": "open",
+          "door": {
+            "door": {
+              "fields": {
+                "display_name": "Some Door",
+                "mqtt_id": "D6545C11-CC5A-421E-9D7D-0B2F762C6282"
+              },
+              "model": "doors.door",
+              "pk": "xxxx-xxxx-xxxx-xxxx-xxxx"
+            }
+          },
+          "user": {
+            "authenticated": true,
+            "location": {
+              "ip": "62.245.152.84",
+              "locator_status": {
+                "xxxx-xxxx-xxxx-xxxx-xxxx": [
+                  false
+                ]
+              },
+              "permitted_networks_status": {
+                "192.168.0.0/24": false
+              }
+            },
+            "user": {
+              "fields": {
+                "date_joined": "2021-09-24T22:28:49.495Z",
+                "display_name": "xxx",
+                "email": "xxxx@example.com",
+                "full_name": "xxxx xxxx",
+                "groups": [],
+                "is_active": true,
+                "is_staff": true,
+                "is_superuser": true,
+                "last_login": "2022-08-19T14:06:23.165Z",
+                "password": "xxxx",
+                "password_last_changed": "2021-09-24T22:28:49.749Z",
+                "user_permissions": [
+                  43
+                ],
+                "username": "xxxx"
+              },
+              "model": "accounts.user",
+              "pk": "xxxx-xxxx-xxxx-xxxx-xxxx"
+            },
+            "user_connections": [
+              {
+                "fields": {
+                  "directory": "3a01ea23-4a7f-4c64-adce-02411cd0a480",
+                  "directory_key": "xxxx-xxxx-xxxx-xxxx-xxxx",
+                  "latest_directory_data": {
+                    "email": "xxxx@example.com",
+                    "email_verified": true,
+                    "family_name": "xxxx",
+                    "given_name": "xxxx",
+                    "ldap_id": "xxxx-xxxx-xxxx-xxxx-xxxx",
+                    "name": "xxxx xxxx",
+                    "preferred_username": "xxxx",
+                    "resource_access": {
+                      "account": {
+                        "roles": [
+                          "manage-account",
+                          "manage-account-links",
+                          "view-profile"
+                        ]
+                      },
+                      "https://wiki.betreiberverein.de/saml2/metadata": {
+                        "roles": [
+                          "Editor"
+                        ]
+                      },
+                      "sesam.zam.haus": {
+                        "roles": [
+                          "MayOpenFrontDoor",
+                          "MayOpenNordUG"
+                        ]
+                      }
+                    },
+                    "sub": "xxxx-xxxx-xxxx-xxxx-xxxx"
+                  },
+                  "user": "xxxx-xxxx-xxxx-xxxx-xxxx"
+                },
+                "model": "accounts.userconnection",
+                "pk": "xxxx-xxxx-xxxx-xxxx-xxxx"
+              }
+            ],
+            "user_permissions": [
+              {
+                "fields": {
+                  "codename": "open_door",
+                  "content_type": 6,
+                  "name": "Can open any door"
+                },
+                "model": "auth.permission",
+                "pk": 43
+              }
+            ]
+          }
+        }
 }

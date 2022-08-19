@@ -1,6 +1,6 @@
 #!/bin/bash
 set -euf -o pipefail
-COMPOSE="docker-compose -f docker-compose.yml"
+COMPOSE="docker-compose -f docker-compose.yml -f docker-compose.prod.yml"
 
 test -f secrets.env
 source secrets.env

@@ -1,0 +1,8 @@
+#default_decision: /http/example/authz/allow
+
+persistence_directory: /var/opa
+
+caching:
+  inter_query_builtin_cache:
+    max_size_bytes: 10000000
+
