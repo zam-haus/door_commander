@@ -50,7 +50,7 @@ class CustomOidcAuthenticationBackend(OIDCAuthenticationBackend):
             raise
         else:
             if created:
-                log.info(f"Created user directory {repr(dir.name)}")
+                log.info("Created user directory %r", dir.name)
             return dir
 
     def create_user(self, claims):
@@ -58,7 +58,7 @@ class CustomOidcAuthenticationBackend(OIDCAuthenticationBackend):
         with transaction.atomic():
             user = User()
             user.email = claims.get("email")
-            if claims.get("email_verified") == False:
+            if claims.get("email_verified") is False:
                 user.email = None
             user.full_name = claims.get("name")
             user.display_name = claims.get("preferred_username")
