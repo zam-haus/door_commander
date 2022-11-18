@@ -11,7 +11,6 @@ from icecream import ic
 
 from accounts.models import User, UserDirectory, UserConnection
 from django.conf import settings
-from doors.models import _PERMISSION_OPEN_DOOR, PERMISSION_OPEN_DOOR
 from pymaybe import maybe
 
 log = getLogger(__name__)
@@ -98,16 +97,19 @@ class CustomOidcAuthenticationBackend(OIDCAuthenticationBackend):
         return user
 
     def update_permissions(self, claims, user):
-        claim_resource_access = maybe(claims) \
-            ["resource_access"]["sesam.zam.haus"] \
-            ["roles"].__contains__("MayOpenFrontDoor")
-        #ic([(p.name, p.codename) for p in Permission.objects.all()])
-        permission = Permission.objects.get(codename=_PERMISSION_OPEN_DOOR)
-        if claim_resource_access.or_else(False):
-            user.user_permissions.add(permission)
-        else:
-            user.user_permissions.remove(permission)
-        user.save()
+        # TODO this dead code is still here because I'd like to specify django superuser/permission status via request to an OPA policy
+        if False:
+            claim_resource_access = maybe(claims) \
+                ["resource_access"]["sesam.zam.haus"] \
+                ["roles"].__contains__("MayOpenFrontDoor")
+            #ic([(p.name, p.codename) for p in Permission.objects.all()])
+            permission = Permission.objects.get(codename="open_door")
+            if claim_resource_access.or_else(False):
+                user.user_permissions.add(permission)
+            else:
+                user.user_permissions.remove(permission)
+            user.save()
+        return
 
 
 def provider_logout(request: HttpRequest):
