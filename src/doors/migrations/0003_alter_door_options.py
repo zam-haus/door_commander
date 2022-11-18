@@ -12,6 +12,7 @@ class Migration(migrations.Migration):
     operations = [
         migrations.AlterModelOptions(
             name='door',
+            # Migration notice: You might need to run manage.py remove_stale_contenttypes to remove old permissions
             options={},
         ),
     ]
