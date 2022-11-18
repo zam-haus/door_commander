@@ -367,6 +367,7 @@ with atomic_globals:
         OIDC_OP_LOGOUT_URL_METHOD = 'accounts.auth.provider_logout'
     # TODO configuration option
     OIDC_RP_SIGN_ALGO = "RS256"
+    OIDC_STORE_ID_TOKEN = True
 if atomic_globals:
     OIDC = True
     INSTALLED_APPS += [
