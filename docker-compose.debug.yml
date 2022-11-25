@@ -8,6 +8,7 @@ services:
   mqtt:
     ports:
       - "127.0.0.1:8082:80" # with nginx SSL reverse proxy
+      - "127.0.0.1:1883:1883" # with nginx SSL reverse proxy
 
   db:
     ports:
@@ -16,6 +17,8 @@ services:
   python:
     ports: [ ]
     # - "127.0.0.1:8000:8000"
+    environment:
+      MQTT_CONNECTION: '{"host":"localhost", "port":1883, "keepalive":10}'
 
   opa:
     ports:
