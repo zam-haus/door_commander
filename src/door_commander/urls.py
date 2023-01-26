@@ -23,7 +23,10 @@ from graphene_django.views import GraphQLView
 
 urlpatterns = [
     path('', include('web_homepage.urls')),
-    path('clientipaddress/', include('clientipaddress.urls')),
+    # <LEGACY>
+    # delete this in future
+    # path('clientipaddress/', include('cliaentipaddress.urls')),
+    # </LEGACY>
     # path('admin/', admin.site.urls),
     url(
         r'^accounts/login/$',
