@@ -11,4 +11,4 @@ $COMPOSE build --parallel
 $COMPOSE up --no-start --force-recreate
 $COMPOSE run --rm python ./manage.py check --deploy
 $COMPOSE run --rm python ./manage.py migrate
-$COMPOSE up
+$COMPOSE up -d

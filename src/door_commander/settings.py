@@ -164,15 +164,15 @@ SILENCED_SYSTEM_CHECKS = [
     "security.W004", # SECURE_HSTS_SECONDS -> responsibility of nginx.
 ]
 SESSION_COOKIE_SECURE = False if DEBUG else True
-# TODO CSRF_COOKIE_SECURE
+CSRF_COOKIE_SECURE = False if DEBUG else True
 
 if DEBUG:
     INSTALLED_APPS += [
         'django_extensions',
-        'debug_toolbar',
+        #'debug_toolbar',
     ]
     MIDDLEWARE += [
-        'debug_toolbar.middleware.DebugToolbarMiddleware',
+        #'debug_toolbar.middleware.DebugToolbarMiddleware',
     ]
 
 # ================================================================

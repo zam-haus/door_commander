@@ -117,8 +117,10 @@ def get_location_info(request):
             return dict(status="NO_IP_PRESENT")
 
 
-@require_POST  # for CSRF protection
 def open(request, door_id):
+    if not request.POST:
+        messages.error(request, "Please try again.")
+        return redirect(home)
 
     if not check_can_open_door(request, Door.objects.get(pk=door_id)):
 

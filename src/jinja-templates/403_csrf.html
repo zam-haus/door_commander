@@ -1,0 +1,46 @@
+{% extends "web_homepage/base.html" %}}
+{% block head %}
+    {{ super() }}
+    {# ... #}
+    <style>
+        h2 {
+            font: sans-serif;
+        }
+
+        button, input, .box {
+            border: none;
+            color: white;
+            padding: 3vw;
+            text-align: center;
+            vertical-align: middle;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 5vw;
+            width: 100%;
+            margin: 3vw 0 0 0;
+            cursor: pointer;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+        }
+
+        .open {
+            background-color: MediumSeaGreen;
+        }
+
+        .logout {
+            background-color: Tomato;
+        }
+
+        .login {
+            background-color: SlateBlue;
+        }
+
+        .admin {
+            background-color: SlateBlue;
+        }
+    </style>
+{% endblock %}
+{% block body %}
+<h2>Ups...</h2>
+<a href="/">probier es doch nochmal</a>
+{% endblock %}
