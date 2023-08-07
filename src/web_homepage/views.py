@@ -28,6 +28,7 @@ PERMITTED_IP_NETWORKS = getattr(settings, 'PERMITTED_IP_NETWORKS', None)
 
 def home(request):
     user_doors = list(door for door in Door.objects.all() if check_can_view_door(request, door))
+    user_doors.sort(key=lambda d: d.order)
     #has_allowed_location, allowed_location_reason = check_has_allowed_location(request)
     doors_status = fetch_status()
     can_open_doors = {door: check_can_open_door(request, door) for door in user_doors}

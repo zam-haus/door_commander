@@ -130,7 +130,6 @@ ALLOWED_HOSTS = [
     '[::1]',
     'python',
     'sesam.zam.haus',
-    # 'door-commander.betreiberverein.de',
 ]
 
 # ================================================================
@@ -222,7 +221,7 @@ WSGI_APPLICATION = 'door_commander.wsgi.application'
 # Authz Microservice
 # ================================================================
 
-OPA_BEARER_TOKEN = os.getenv("OPA_BEARER_TOKEN")
+OPA_BEARER_TOKEN = os.getenv("OPA_BEARER_TOKEN") or ""
 OPA_URL = os.getenv("OPA_URL")
 
 # ================================================================

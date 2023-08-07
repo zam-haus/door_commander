@@ -14,8 +14,19 @@ class Door(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     mqtt_id = models.CharField(max_length=256, unique=True, db_index=True)
     display_name = models.TextField()
+    order = models.IntegerField(help_text="Order of appearance for door buttons. Lower is higher up.", default=42)
+    text_color = models.CharField(
+        max_length=7,
+        default="#ffffff",
+        null=True,
+        help_text="HTML hex color code for text on button")
+    button_color = models.CharField(
+        max_length=7,
+        default="#60b177",
+        help_text="HTML hex color code for button")
     class Meta:
         permissions = [
             (_PERMISSION_OPEN_DOOR, "Can open any door"),
             (_PERMISSION_LOCATION_OVERRIDE, "Can open doors from anywhere"),
         ]
+        ordering = ('order',)

@@ -38,24 +38,13 @@ def get_auth_header():
 
 
 def get_allowed_result(path, function, key="allow"):
-    try:
-        if get_data_result(path, function)[key] is True:
-            return True
-        else:
-            return False
-    except:
-        raise Exception("Auth check failed")
-
+    return get_data_result(path, function)[key] is True
 
 def check_allowed(path, function):
-    try:
-        if get_data_result(path, function)["allow"] is True:
-            return
-        else:
-            raise Exception("Unauthorized")  # TODO 401/403
-    except:
-        raise Exception("Auth check failed")
-
+    if get_data_result(path, function)["allow"] is True:
+        return
+    else:
+        raise Exception("Unauthorized")  # TODO 401/403
 
 def get_data_result(path, function):
     """
@@ -84,7 +73,7 @@ def get_data_result(path, function):
         # log.setLevel(logging.DEBUG)
         log.debug("Return authorization result %s", ic.format(path, input, result))
         return result['result']
-    except:
+    except Exception as e:
         raise Exception("Auth check failed")
 
 

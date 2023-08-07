@@ -14,7 +14,6 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.conf import settings
-from django.conf.urls import url
 from django.contrib import admin
 from django.urls import path, include
 
@@ -28,8 +27,8 @@ urlpatterns = [
     # path('clientipaddress/', include('cliaentipaddress.urls')),
     # </LEGACY>
     # path('admin/', admin.site.urls),
-    url(
-        r'^accounts/login/$',
+    path(
+        'accounts/login/',
         LoginView.as_view(
             template_name='admin/login.html',
             extra_context={
