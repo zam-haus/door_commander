@@ -55,8 +55,7 @@ class MqttWifiLocatorEndpoint(GenericMqttEndpoint):
             # door_id, = unpack_topic("door/+/presence", message.topic)
 
             ips = parsed_payload["ip_addresses"]
-            # for now, it is not yet decided whether we need netmasks, thus we only accept single IPs, but already convert them to a network here.
-            parsed_ip_networks = [ip_network(ip_address(ip)) for ip in ips]
+            parsed_ip_networks = [ip_network(ip, strict=False) for ip in ips]
             self._ip_networks[locator_id] = parsed_ip_networks
 
             # ic(self._ip_networks)
