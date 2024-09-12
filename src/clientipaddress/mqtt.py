@@ -55,12 +55,15 @@ class MqttWifiLocatorEndpoint(GenericMqttEndpoint):
             # door_id, = unpack_topic("door/+/presence", message.topic)
 
             ips = parsed_payload["ip_addresses"]
-            parsed_ip_networks = [ip_network(ip, strict=False) for ip in ips]
+            parsed_ip_networks = []
+            for ip in ips:
+                try:
+                    parsed_ip_networks.append(ip_network(ip, strict=False))
+                except:
+                    log.error("Failed to parse zam ip, thus ignoring entry: "+repr(ip))
             self._ip_networks[locator_id] = parsed_ip_networks
-
-            # ic(self._ip_networks)
-        except:
-            log.error("Failed to parse door presence message.")
+        except Exception as e:
+            log.error("Failed to parse door presence message: "+repr(e))
 
     def open(self, mqtt_id, timeout: Number):
         payload = dict(not_after=timeout)

@@ -49,6 +49,7 @@
     {% endif %}
     <div>
         {% for door in doors %}
+	    {# <!-- {{ door.display_name }} - doorid: {{door.id}}, doormqttid: {{door.mqtt_id}} --> #}
             {% if can_open_doors[door] %}
                 <form action="{{ url("open", kwargs=dict(door_id=door.id)) }}" method="post">
                     {{ csrf_input }}

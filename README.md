@@ -1,3 +1,13 @@
+# Wichtiges zur Nutzung
+
+./set-secrets.sh löscht secrets an lustigen Stellen - NICHT in einem schon konfigurierten Umfeld nutzen, sonst ist alles kaputt:
+
+ * Türenzugangsdaten werden in der mosquitto.passwd gelöscht
+
+
+# Alte "Readme"
+
+
 1. Add the hostname 
    1. in settings.py to ALLOWED_HOSTS
    2. in nginx.conf to server_name

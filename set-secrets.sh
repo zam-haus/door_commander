@@ -2,6 +2,10 @@
 set -euf -o pipefail
 # set -x
 
+
+echo "Falls du das wirklich machen willst, dann kommentier nachfolgende Zeile aus!"
+exit 1
+
 # stop and remove all containers, otherwise we can't pass the new parameters as environment variables
 docker-compose down
 
