@@ -80,6 +80,7 @@ def get_data_result(path, input_data):
                 + path
                 + ("?explain=full&pretty" if explain else "")
         )
+        log.debug("full url %s", fullurl)
         response = requests.post(fullurl, json=request_data, headers=get_auth_header())
 
         if response.status_code != 200:

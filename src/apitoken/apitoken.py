@@ -4,6 +4,7 @@ import uuid
 from dataclasses import dataclass
 
 from django.core.handlers.wsgi import WSGIRequest
+from icecream import ic
 
 from accounts.models import User
 from apitoken.models import ApiToken
@@ -23,19 +24,24 @@ class TokenData:
 
 
 def _validate_and_unpack_token(token: str) -> dict | None:
+    #ic(token)
     result = get_data_result('app/door_commander/apitoken', dict(token=token))
-    if result['token_is_valid'] is True:
-        payload = result['token_payload']
+    #ic(result, result['token_valid'] )
+    if result['token_valid'] is True:
+        payload = result['decoded_payload']
         return payload
     return None
 
 
 def authenticate(token: str) -> User | None:
     raw_token_data = _validate_and_unpack_token(token)
+    ic(raw_token_data)
     if raw_token_data:
         token_data = TokenData(**raw_token_data)
+        ic(token_data)
         token_database_entry = ApiToken.objects.get(id=token_data.id)
         current_serial = token_data.serial
+        ic(current_serial)
         if current_serial <= token_database_entry.newest_serial:
             if current_serial >= token_database_entry.oldest_serial or token_database_entry.sync_mode:
                 user = token_database_entry.user
@@ -62,10 +68,12 @@ def _pack_and_sign_token(raw_token_data) -> str:
 
 
 def renew_token(api_token: ApiToken) -> str:
+    log.debug("renew token %s", api_token)
     api_token.newest_serial += 1
     api_token.save()
     token_data = TokenData(id=str(api_token.id), serial=api_token.newest_serial)
     raw_token_data = dataclasses.asdict(token_data)
+    log.debug("sending %s", raw_token_data)
     token = _pack_and_sign_token(raw_token_data)
     return token
 

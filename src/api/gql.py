@@ -26,7 +26,10 @@ class SecurityMiddleware(object):
         raise error if expose_details else Exception("There was an exception. Ask the admin for logs.")
 
     def resolve(self, next, root, info, **args):
-        return next(root, info, **args).catch(self.on_error)
+        try:
+            return next(root, info, **args)
+        except Exception as exc:
+            self.on_error(exc)
 
 
 class Query(
@@ -37,6 +40,7 @@ class Query(
     if settings.DEBUG:
         from graphene_django.debug import DjangoDebug
         debug = graphene.Field(DjangoDebug, name='_debug')
+
 
 
 class Mutation(graphene.ObjectType):
@@ -54,16 +58,18 @@ class Mutation(graphene.ObjectType):
 
 class AuthenticationMiddleware(object):
     def resolve(self, next, root, info, **args):
-        if info.field_name == 'user':
-            auth_header: str = info.context.META.get('HTTP_AUTHORIZATION')
-            if auth_header.startswith("Bearer "):
-                token = auth_header.removeprefix("Bearer ")
-                user = apitoken.apitoken.authenticate(token)
-                if isinstance(info.context, WSGIRequest):
-                    info.context.user = user
-                    # TODO disable csrf
-                else:
-                    log.error("Context %r is no WSGIRequest", info.context)
+        #ic(info)
+        auth_header: str = info.context.META.get('HTTP_AUTHORIZATION')
+        #ic(auth_header)
+        if auth_header.startswith("Bearer "):
+            token = auth_header.removeprefix("Bearer ")
+            ic(token)
+            user = apitoken.apitoken.authenticate(token)
+            ic(user)
+            if isinstance(info.context, WSGIRequest):
+                info.context.user = user
+            else:
+                log.error("Context %r is no WSGIRequest", info.context)
         return next(root, info, **args)
 
 

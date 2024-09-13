@@ -29,6 +29,7 @@ selenium = "*"
 pylint = "*"
 rich = "*"
 django-debug-toolbar = "*"
+jupyter = "*"
 
 [requires]
 python_version = "3"

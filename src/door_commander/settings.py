@@ -430,7 +430,12 @@ GRAPHENE = {
         'graphene_django.debug.DjangoDebugMiddleware',
         # this hides exception messages, except for explicit graphql exceptions:
         'api.gql.SecurityMiddleware',
-    ] if DEBUG else [],
+        'api.gql.AuthenticationMiddleware',
+    ] if DEBUG else [
+        # this hides exception messages, except for explicit graphql exceptions:
+        'api.gql.SecurityMiddleware',
+        'api.gql.AuthenticationMiddleware',
+    ],
 }
 
 # ================================================================

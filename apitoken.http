@@ -1,5 +1,14 @@
+GET localhost:8000/api/
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiAiSFMyNTYiLCAidHlwIjogIkpXVCJ9.eyJpZCI6ICIxOWM2ZTIzOS04MGU0LTRhMjItYjcwMC1iNGE1Yjg3YzNjMTAiLCAic2VyaWFsIjogNDh9.fjgoGIceD6QAL_4CyI2pMdmtDNgJMCdLFYvOy7NuKAQ
+
+
+###
 POST localhost:8000/api/
 Content-Type: application/json
 Authorization: Bearer eyJhbGciOiAiSFMyNTYiLCAidHlwIjogIkpXVCJ9.eyJpZCI6ICIxOWM2ZTIzOS04MGU0LTRhMjItYjcwMC1iNGE1Yjg3YzNjMTAiLCAic2VyaWFsIjogNDh9.fjgoGIceD6QAL_4CyI2pMdmtDNgJMCdLFYvOy7NuKAQ
+Cookie: csrftoken=foobar
+X-Csrf-Token: foobar
+
 
 {"query":"mutation Do { apitoken { refresh(id:\"19c6e239-80e4-4a22-b700-b4a5b87c3c10\") { token } } }"}
