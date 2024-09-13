@@ -100,9 +100,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Django Security Settings
 # ================================================================
 
-DEBUG_FILE = BASE_DIR.joinpath("./data/ACTIVATE_DEBUG_MODE")
-# If you want to debug; create a file in the directory indicated above.
-DEBUG = DEBUG_FILE.exists()
+DEBUG = bool(os.getenv('ACTIVATE_DEBUG_MODE'))
 
 # this allows to use {% if debug %} in django templates.
 INTERNAL_IPS = ['127.0.0.1', '::1']
