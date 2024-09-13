@@ -4,4 +4,4 @@ It is removed when the docker container is build, and replaced by the data in pr
 
 If you need to debug on a development docker container, try
 
-    docker-compose exec python touch data/ACTIVATE_DEBUG_MODE
+    export ACTIVATE_DEBUG_MODE=1
