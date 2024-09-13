@@ -6,6 +6,7 @@ from icecream import ic
 from django.conf import settings
 
 log = logging.getLogger(__name__)
+log_explain = log.getChild("explain")
 
 
 def get_query_result(query, input_data):
@@ -68,18 +69,30 @@ def get_data_result(path, input_data):
         request_data = dict(input=input_data)
         # Normalize the URL, OPA uses problematic redirects https://github.com/open-policy-agent/opa/issues/2137
         url: str
-        fullurl = url \
-                  + ("" if url.endswith("/") else "/") \
-                  + "v1/data" \
-                  + ("" if path.startswith("/") else "/") \
-                  + path
+
+        explain = log_explain.getEffectiveLevel() <= logging.DEBUG
+
+        fullurl = (
+                url
+                + ("" if url.endswith("/") else "/")
+                + "v1/data"
+                + ("" if path.startswith("/") else "/")
+                + path
+                + ("?explain=full&pretty" if explain else "")
+        )
         response = requests.post(fullurl, json=request_data, headers=get_auth_header())
 
         if response.status_code != 200:
             raise Exception("Auth failed")
 
-        result = response.json()
+        result:dict = response.json()
         # log.setLevel(logging.DEBUG)
+        if explain:
+            explanations = result.pop('explanation',None)
+            for explanation in explanations:
+                log.debug("OPA explanation: %s", explanation)
+
+
         log.debug("Return authorization result %s", ic.format(path, request_data, result))
         return result['result']
     except Exception as exc:

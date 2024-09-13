@@ -89,7 +89,7 @@ services:
               "propagate": false
             },
             "web_homepage.views": {"level":"WARN"},
-            "ipware.ip": {"level":"ERROR"}
+            "ipware.ip": {"level":"ERROR"},
           }
         }
         '

@@ -12,6 +12,7 @@ from ipware import get_client_ip
 
 log = logging.getLogger(__name__)
 
+
 def check_permission_and_open(door_id, request):
     """opens the door if the user is allowed to"""
 
@@ -20,14 +21,15 @@ def check_permission_and_open(door_id, request):
         door = Door.objects.get(pk=door_id)
         mqtt_id = door.mqtt_id
 
-        door_commander_mqtt.open(mqtt_id, timeout=time.time() + 30)
-
-        log.warning(ic.format(
+        log.warning("opening door -- %s", ic.format(
             request.user,
             get_client_ip(request, **IPWARE_KWARGS),
             door,
             door.display_name))
 
+        door_commander_mqtt.open(mqtt_id, timeout=time.time() + 30)
+
         return True
     else:
+        log.error("Refused to open door.")
         return False

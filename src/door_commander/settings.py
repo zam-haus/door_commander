@@ -47,7 +47,6 @@ try:
 except:
     RichHandler = None
 
-
 logging.addLevelName(AUDIT, "AUDIT")
 _DJANGO_LOGGING = os.getenv("DJANGO_LOGGING")
 LOGGING = json.loads(_DJANGO_LOGGING) if _DJANGO_LOGGING else {
@@ -86,7 +85,10 @@ LOGGING = json.loads(_DJANGO_LOGGING) if _DJANGO_LOGGING else {
             # paho seems to log everything, including connection errors at level 16, which is between DEBUG and INFO
             'level': 'INFO',
             'propagate': False,
-        }
+        },
+        'door_commander.opa.explain': {'level': 'ERROR', },
+        'door_commander.opa': {'level': 'INFO', },
+        'ipware.ip': {'level': 'ERROR', },
     },
 }
 logging.config.dictConfig(LOGGING)
@@ -110,6 +112,7 @@ INTERNAL_IPS = ['127.0.0.1', '::1']
 SECRET_KEY_FILE = BASE_DIR.joinpath("./data/django-secret-key.json")
 
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
 
 def load_or_create_secret_key() -> str:
     # TODO we now pass all secrets via environment, we might want to do this here too.
@@ -139,7 +142,8 @@ ALLOWED_HOSTS = [
 
 
 INSTALLED_APPS = [
-    'django.contrib.admin',  # https://docs.djangoproject.com/en/3.2/ref/contrib/admin/
+    'door_commander.apps.MyAdminConfig',
+    # 'django.contrib.admin',  # https://docs.djangoproject.com/en/3.2/ref/contrib/admin/
     'django.contrib.auth',  # https://docs.djangoproject.com/en/3.2/ref/contrib/auth/
     'django.contrib.contenttypes',  # https://docs.djangoproject.com/en/3.2/ref/contrib/contenttypes/
     'django.contrib.sessions',  # https://docs.djangoproject.com/en/3.2/topics/http/sessions/
@@ -157,10 +161,9 @@ MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
 ]
 
-
 SILENCED_SYSTEM_CHECKS = [
-    "security.W008", # SECURE_SSL_REDIRECT -> responsibility of nginx.
-    "security.W004", # SECURE_HSTS_SECONDS -> responsibility of nginx.
+    "security.W008",  # SECURE_SSL_REDIRECT -> responsibility of nginx.
+    "security.W004",  # SECURE_HSTS_SECONDS -> responsibility of nginx.
 ]
 SESSION_COOKIE_SECURE = False if DEBUG else True
 CSRF_COOKIE_SECURE = False if DEBUG else True
@@ -451,6 +454,7 @@ CELERY_BEAT_SCHEDULE = {
 INSTALLED_APPS += [
     'doors',
     'accounts',
+    'apitoken',
     'api',
     'web_homepage',
     'clientipaddress',

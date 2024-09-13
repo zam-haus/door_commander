@@ -1,6 +1,9 @@
 import graphene
+from django.core.handlers.wsgi import WSGIRequest
 from graphene_django import DjangoObjectType
+from graphql import GraphQLError
 
+import doors.open
 from doors import mqtt
 from doors.models import Door as DoorModel
 
@@ -45,3 +48,26 @@ class DoorsQuery(graphene.ObjectType):
         # TODO
         mqtt.door_commander_mqtt.doors_presence[DoorModel.objects.all()[0].mqtt_id] = True
         return mqtt.door_commander_mqtt.doors_presence.items()
+
+
+
+class OpenDoorMutation(graphene.Mutation):
+    class Arguments:
+        id = graphene.ID()
+
+    ok = graphene.Boolean()
+
+    def mutate(self, info: graphene.ResolveInfo, id):
+        # TODO https://github.com/graphql-python/graphene-django/issues/345
+        if isinstance(info.context, WSGIRequest):
+            success = doors.open.check_permission_and_open(id, info.context)
+            if not success:
+                raise GraphQLError("Not authorized.")
+        return OpenDoorMutation(ok=True)
+
+
+
+
+
+class DoorsMutations(graphene.ObjectType):
+    open_door = OpenDoorMutation.Field()

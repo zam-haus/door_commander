@@ -19,7 +19,7 @@ def get_location_info(request):
         return dict(status="IPWARE_NOT_CONFIGURED")
     else:
         ip = get_client_ip(request, **IPWARE_KWARGS)
-        log_ip.debug(ic.format('ip', ip))
+        log_ip.debug("Request IP is %r", ip)
         # log_ip.debug(ic.format(request.META))
         # log_ip.debug(ic.format(request.headers))
         if ip:

@@ -2,11 +2,14 @@ import logging
 
 from django.conf import settings
 import graphene
+from django.core.handlers.wsgi import WSGIRequest
 from graphql import GraphQLError
 from icecream import ic
 
+import apitoken.apitoken
 from accounts.gql import UsersQuery
-from doors.gql import DoorsQuery
+from apitoken.gql import ApitokenMutations
+from doors.gql import DoorsQuery, DoorsMutations
 
 log = logging.getLogger(__name__)
 
@@ -36,4 +39,32 @@ class Query(
         debug = graphene.Field(DjangoDebug, name='_debug')
 
 
-schema = graphene.Schema(query=Query)
+class Mutation(graphene.ObjectType):
+    door = graphene.Field(DoorsMutations)
+
+    @staticmethod
+    def resolve_door(self, info):
+        return DoorsMutations()
+    apitoken = graphene.Field(ApitokenMutations)
+
+    @staticmethod
+    def resolve_apitoken(self, info):
+        return ApitokenMutations()
+
+
+class AuthenticationMiddleware(object):
+    def resolve(self, next, root, info, **args):
+        if info.field_name == 'user':
+            auth_header: str = info.context.META.get('HTTP_AUTHORIZATION')
+            if auth_header.startswith("Bearer "):
+                token = auth_header.removeprefix("Bearer ")
+                user = apitoken.apitoken.authenticate(token)
+                if isinstance(info.context, WSGIRequest):
+                    info.context.user = user
+                    # TODO disable csrf
+                else:
+                    log.error("Context %r is no WSGIRequest", info.context)
+        return next(root, info, **args)
+
+
+schema = graphene.Schema(query=Query, mutation=Mutation)
