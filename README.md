@@ -24,3 +24,10 @@
 12. You can update a door's status with the following command (fill in your door's mqtt id)
 
     ```(. secrets.env ; mosquitto_pub -h localhost -u controller -P "${MQTT_PASSWD_CONTROLLER}" -p 1883 -d -t 'door/f16f33d2-7d87-45d3-937d-f5d64d957e8f/presence' -m 'true')```
+
+# Development with pycharm
+You need to set some environment variables in the run configuration:
+
+```PYTHONUNBUFFERED=1;DJANGO_SETTINGS_MODULE=door_commander.settings;ACTIVATE_DEBUG_MODE=active;OPA_URL=http://localhost:8181/```
+
+See also the .env loaded by pipenv run and debug.sh
