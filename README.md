@@ -28,6 +28,21 @@
 # Development with pycharm
 You need to set some environment variables in the run configuration:
 
-```PYTHONUNBUFFERED=1;DJANGO_SETTINGS_MODULE=door_commander.settings;ACTIVATE_DEBUG_MODE=active;OPA_URL=http://localhost:8181/```
+```
+PYTHONUNBUFFERED=1;DJANGO_SETTINGS_MODULE=door_commander.settings;ACTIVATE_DEBUG_MODE=active;OPA_URL=http://localhost:8181/
+```
 
 See also the .env loaded by pipenv run and debug.sh
+
+# OPA debugging
+You can access the data in the debug-mode-containers started with debug.sh via 
+
+http://127.0.0.1:8181/v1/data/app/door_commander/physical_access
+
+or you can go to http://127.0.0.1:8181/ and use the query
+
+```
+result := data.app.door_commander.physical_access
+```
+
+Authentication for the OPA server is disabled in debug containers
