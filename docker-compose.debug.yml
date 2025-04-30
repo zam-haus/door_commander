@@ -22,6 +22,8 @@ services:
   opa:
     ports:
       - "127.0.0.1:8181:8181"
+    environment:
+      OPA_DEBUG_MODE: 'unauthenticated'
 
   nginx:
     ports:
