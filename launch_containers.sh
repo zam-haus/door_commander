@@ -1,6 +1,9 @@
 #!/bin/bash
 set -euf -o pipefail
-COMPOSE="docker-compose -f docker-compose.yml -f docker-compose.prod.yml"
+
+COMPOSE="docker-compose"
+which podman-compose && COMPOSE="podman-compose"
+COMPOSE="$COMPOSE -f docker-compose.yml -f docker-compose.prod.yml"
 
 test -f secrets.env
 source secrets.env
