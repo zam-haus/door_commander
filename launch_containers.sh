@@ -9,7 +9,11 @@ test -f secrets.env
 source secrets.env
 
 set -x
-$COMPOSE build --parallel
+if which podman-compose ; then
+  $COMPOSE build
+else
+  $COMPOSE build --parallel
+fi
 # recreate the containers with the new password.
 $COMPOSE up --no-start --force-recreate
 $COMPOSE run --rm python ./manage.py check --deploy
