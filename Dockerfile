@@ -1,4 +1,4 @@
-ARG PYTHON_VERSION=latest
+ARG PYTHON_VERSION=3.8
 ARG NGINX_VERSION=latest
 FROM python:${PYTHON_VERSION} AS python-dependencies
 
@@ -13,11 +13,12 @@ RUN pip install pipenv
 WORKDIR /opt/door-commander.betreiberverein.de/
 
 COPY Pipfile .
-COPY Pipfile.lock .
+#COPY Pipfile.lock .
 # We have to enable this to allow the non-root-user to access the write-protected python later on.
 # Otherwise, the venv would reside in /root/.local/share/virtualenvs/
 ENV PIPENV_VENV_IN_PROJECT=1
 # alpine does not support manylinux, and needs to compile psycopg2
+RUN pipenv --python 3.8
 RUN pipenv install --deploy
 
 
