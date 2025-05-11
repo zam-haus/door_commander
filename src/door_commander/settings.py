@@ -236,6 +236,7 @@ OPA_URL = os.getenv("OPA_URL")
 POSTGRES_DB = os.getenv("POSTGRES_DB")
 if not POSTGRES_DB:
     if DEBUG:
+        log.warning("Using sqlite database")
         DATABASES = {
             'default': {
                 'ENGINE': 'django.db.backends.sqlite3',
