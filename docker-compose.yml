@@ -95,7 +95,7 @@ services:
         '
     build:
       &python-build
-      context: ""
+      context: "."
       dockerfile: Dockerfile
       target: python-web
       args:
@@ -131,7 +131,7 @@ services:
     command: run --server --addr :8181 --authentication=token --authorization=basic -c /data/config.yaml /data/policy
     environment:
       OPA_BEARER_TOKEN: '${OPA_BEARER_TOKEN}'
-    image: openpolicyagent/opa
+    image: "openpolicyagent/opa:0.70.0"
     networks:
       - opa
     ports: []
@@ -143,7 +143,7 @@ services:
 
   nginx:
     build:
-      context: ""
+      context: "."
       dockerfile: Dockerfile
       target: nginx
       args:

@@ -4,12 +4,13 @@ set -euf -o pipefail
 
 
 echo "Falls du das wirklich machen willst, dann kommentier nachfolgende Zeile aus!"
-exit 1
+#exit 1
 
 # stop and remove all containers, otherwise we can't pass the new parameters as environment variables
 docker-compose down
 
-source .env
+set -o allexport; source .env; set +o allexport
+COMPOSE="$COMPOSE -f docker-compose.yml -f docker-compose.prod.yml"
 
 # clear the file
 echo >secrets.env
@@ -28,7 +29,7 @@ export MQTT_PASSWD_CONTROLLER
 declare -p MQTT_PASSWD_CONTROLLER >>secrets.env
 rm -f mosquitto/config/mosquitto.passwd
 touch mosquitto/config/mosquitto.passwd  # otherwise a directory will be created
-docker-compose run --rm mqtt mosquitto_passwd -b /mosquitto/config/mosquitto.passwd controller "$MQTT_PASSWD_CONTROLLER"
+$COMPOSE run --rm mqtt mosquitto_passwd -b /mosquitto/config/mosquitto.passwd controller "$MQTT_PASSWD_CONTROLLER"
 echo ::endgroup::
 
 
@@ -38,7 +39,7 @@ echo ::group::pgSQL Superuser Password
 POSTGRES_PASSWORD="$(generate_password)"
 export POSTGRES_PASSWORD
 declare -p POSTGRES_PASSWORD >>secrets.env
-docker-compose run --rm db /docker-postgres-run-command.sh /update_superuser.sh
+$COMPOSE run --rm db /docker-postgres-run-command.sh /update_superuser.sh
 echo ::endgroup::
 
 echo ::group::pgSQL Django Password
@@ -46,7 +47,7 @@ POSTGRES_PASSWORD_DJANGO="$(generate_password)"
 export POSTGRES_PASSWORD_DJANGO
 declare -p POSTGRES_PASSWORD_DJANGO >>secrets.env
 USER="${POSTGRES_USER_DJANGO}" PASSWORD="${POSTGRES_PASSWORD_DJANGO}" DB="${POSTGRES_DB_DJANGO}" \
-  docker-compose run --rm \
+  $COMPOSE run --rm \
   -e USER -e PASSWORD -e DB \
   db /docker-postgres-run-command.sh /update_other_user.sh
 echo ::endgroup::

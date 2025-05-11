@@ -7,7 +7,7 @@
 
 # Alte "Readme"
 
-
+0. Set your compose environment in .env (`docker compose` on Ubuntu, `docker-compose` on Debian, `podman-compose` if using Podman)
 1. Add the hostname 
    1. in settings.py to ALLOWED_HOSTS
    2. in nginx.conf to server_name
@@ -24,3 +24,25 @@
 12. You can update a door's status with the following command (fill in your door's mqtt id)
 
     ```(. secrets.env ; mosquitto_pub -h localhost -u controller -P "${MQTT_PASSWD_CONTROLLER}" -p 1883 -d -t 'door/f16f33d2-7d87-45d3-937d-f5d64d957e8f/presence' -m 'true')```
+
+# Development with pycharm
+You need to set some environment variables in the run configuration:
+
+```
+PYTHONUNBUFFERED=1;DJANGO_SETTINGS_MODULE=door_commander.settings;ACTIVATE_DEBUG_MODE=active;OPA_URL=http://localhost:8181/
+```
+
+See also the .env loaded by pipenv run and debug.sh
+
+# OPA debugging
+You can access the data in the debug-mode-containers started with debug.sh via 
+
+http://127.0.0.1:8181/v1/data/app/door_commander/physical_access
+
+or you can go to http://127.0.0.1:8181/ and use the query
+
+```
+result := data.app.door_commander.physical_access
+```
+
+Authentication for the OPA server is disabled in debug containers
