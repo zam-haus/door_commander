@@ -5,11 +5,11 @@ set -euf -o pipefail
 
 test -f secrets.env && (echo "Please delete secrets.env and rerun." && exit 1)
 
-# stop and remove all containers, otherwise we can't pass the new parameters as environment variables
-docker-compose down
-
 set -o allexport; source .env; set +o allexport
 COMPOSE="$COMPOSE -f docker-compose.yml -f docker-compose.prod.yml"
+
+# stop and remove all containers, otherwise we can't pass the new parameters as environment variables
+$COMPOSE down
 
 # clear the file
 echo >secrets.env
