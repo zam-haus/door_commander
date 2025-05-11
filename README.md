@@ -7,7 +7,7 @@
 
 # Alte "Readme"
 
-
+0. Set your compose environment in .env (`docker compose` on Ubuntu, `docker-compose` on Debian, `podman-compose` if using Podman)
 1. Add the hostname 
    1. in settings.py to ALLOWED_HOSTS
    2. in nginx.conf to server_name

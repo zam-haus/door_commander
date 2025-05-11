@@ -1,8 +1,7 @@
 #!/bin/bash
 set -euf -o pipefail
 
-COMPOSE="docker compose"
-which podman-compose && COMPOSE="podman-compose"
+set -o allexport; source .env; set +o allexport
 COMPOSE="$COMPOSE -f docker-compose.yml -f docker-compose.prod.yml"
 
 test -f secrets.env
