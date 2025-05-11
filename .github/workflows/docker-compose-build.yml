@@ -26,9 +26,9 @@ jobs:
       - uses: actions/checkout@v2
 
       - name: Build
-        run: docker-compose build --parallel
+        run: docker compose build --parallel
       - name: Pull
-        run: docker-compose pull
+        run: docker compose pull
       - name: Set Secrets
         run: ./set-secrets.sh
       - name: Create
