@@ -86,6 +86,10 @@ LOGGING = json.loads(_DJANGO_LOGGING) if _DJANGO_LOGGING else {
             # paho seems to log everything, including connection errors at level 16, which is between DEBUG and INFO
             'level': 'INFO',
             'propagate': False,
+        },
+        'django.db.backends': {
+            'level': 'DEBUG',
+            'handlers': ['console'],
         }
     },
 }
