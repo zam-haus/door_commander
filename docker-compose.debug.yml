@@ -16,11 +16,15 @@ services:
   python:
     ports: [ ]
     # - "127.0.0.1:8000:8000"
+    environment:
+      ACTIVATE_DEBUG_MODE:
 
   opa:
     ports:
       - "127.0.0.1:8181:8181"
+    environment:
+      OPA_DEBUG_MODE: 'unauthenticated'
 
   nginx:
     ports:
-      - "127.0.0.1:80:80"
+      - "127.0.0.1:8080:80"

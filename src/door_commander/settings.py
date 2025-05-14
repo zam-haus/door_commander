@@ -86,6 +86,10 @@ LOGGING = json.loads(_DJANGO_LOGGING) if _DJANGO_LOGGING else {
             # paho seems to log everything, including connection errors at level 16, which is between DEBUG and INFO
             'level': 'INFO',
             'propagate': False,
+        },
+        'django.db.backends': {
+            'level': 'DEBUG',
+            'handlers': ['console'],
         }
     },
 }
@@ -100,9 +104,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Django Security Settings
 # ================================================================
 
-DEBUG_FILE = BASE_DIR.joinpath("./data/ACTIVATE_DEBUG_MODE")
-# If you want to debug; create a file in the directory indicated above.
-DEBUG = DEBUG_FILE.exists()
+DEBUG = bool(os.getenv('ACTIVATE_DEBUG_MODE'))
 
 # this allows to use {% if debug %} in django templates.
 INTERNAL_IPS = ['127.0.0.1', '::1']
@@ -234,6 +236,7 @@ OPA_URL = os.getenv("OPA_URL")
 POSTGRES_DB = os.getenv("POSTGRES_DB")
 if not POSTGRES_DB:
     if DEBUG:
+        log.warning("Using sqlite database")
         DATABASES = {
             'default': {
                 'ENGINE': 'django.db.backends.sqlite3',

@@ -27,7 +27,7 @@ services:
       context: ./postgres
       dockerfile: postgres.dockerfile
       args:
-        POSTGRES_VERSION: 13
+        POSTGRES_VERSION: 14
         #POSTGRES_VERSION: latest
     environment:
       - POSTGRES_USER=user
@@ -95,11 +95,11 @@ services:
         '
     build:
       &python-build
-      context: ""
+      context: "."
       dockerfile: Dockerfile
       target: python-web
       args:
-        PYTHON_VERSION: 3.8
+        PYTHON_VERSION: "3.10"
     #image: python_image
     volumes:
       - "door-commander-python-data:/opt/door-commander.betreiberverein.de/data"
@@ -131,7 +131,7 @@ services:
     command: run --server --addr :8181 --authentication=token --authorization=basic -c /data/config.yaml /data/policy
     environment:
       OPA_BEARER_TOKEN: '${OPA_BEARER_TOKEN}'
-    image: openpolicyagent/opa
+    image: "openpolicyagent/opa:0.70.0"
     networks:
       - opa
     ports: []
@@ -143,11 +143,11 @@ services:
 
   nginx:
     build:
-      context: ""
+      context: "."
       dockerfile: Dockerfile
       target: nginx
       args:
-        PYTHON_VERSION: 3.8
+        PYTHON_VERSION: "3.10"
         NGINX_VERSION: 1-alpine
     depends_on:
       - python

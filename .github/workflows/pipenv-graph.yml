@@ -29,7 +29,7 @@ jobs:
       run: |
         pipenv graph | tee graph.txt
     - name: Archive results
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v4
       with:
         name: python-dependency-graph
         path: graph.txt
