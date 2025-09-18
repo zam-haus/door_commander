@@ -16,7 +16,7 @@ from accounts.models import User
 from door_commander.opa import get_allowed_result
 from doors.mqtt import door_commander_mqtt
 from django.conf import settings
-from doors.models import PERMISSION_OPEN_DOOR, Door
+from doors.models import PERMISSION_OPEN_DOOR, Door, MultiOpen
 from clientipaddress.mqtt import wifi_locator_mqtt
 
 log = logging.getLogger(__name__)
@@ -27,17 +27,21 @@ PERMITTED_IP_NETWORKS = getattr(settings, 'PERMITTED_IP_NETWORKS', None)
 
 
 def home(request):
-    user_doors = list(door for door in Door.objects.all() if check_can_view_door(request, door))
-    user_doors.sort(key=lambda d: d.order)
+    user_doors = list(door for door in Door.objects.all() if (not door.hidden) and check_can_view_door(request, door))
+    user_multiopens = list(mo for mo in MultiOpen.objects.all() if check_can_view_multiopen(request, mo))
     #has_allowed_location, allowed_location_reason = check_has_allowed_location(request)
     doors_status = fetch_status()
-    can_open_doors = {door: check_can_open_door(request, door) for door in user_doors}
+    can_open_doors = {door: check_can_open_door(request, door) for door in user_doors} | {mo: True for mo in user_multiopens}
+    user_actions = user_doors + user_multiopens
+    user_actions.sort(key = lambda a: a.order)
+    actions = {d: "open" for d in user_doors} | {mo: "open_group" for mo in user_multiopens}
     ic(can_open_doors, user_doors)
     context= dict(
         can_open_doors=can_open_doors,
-        doors=user_doors,
+        doors=user_actions,
         doors_status=doors_status,
-        show_location_hint=check_location_hint(request)
+        show_location_hint=check_location_hint(request),
+        doors_action=actions,
     )
     return render(request, 'web_homepage/index.html', context=context)
     # return redirect("https://betreiberverein.de/impressum/")
@@ -69,6 +73,13 @@ def check_location_hint(request):
     user_dict = create_request_user_info(request)
     has_permission = get_allowed_result("app/door_commander/physical_access", dict(user=user_dict), key="show_location_hint")
     return has_permission
+
+def check_can_view_multiopen(request, multiopen_group):
+    """ a multiopen is visible if at least one door is openable """
+    for door in multiopen_group.doors.all():
+        if check_can_open_door(request, door):
+            return True
+    return False
 
 
 def create_request_user_info(request):
@@ -118,12 +129,12 @@ def get_location_info(request):
             return dict(status="NO_IP_PRESENT")
 
 
-def open(request, door_id):
+def open(request, id):
     if not request.POST:
         messages.error(request, "Please try again.")
         return redirect(home)
 
-    if not check_can_open_door(request, Door.objects.get(pk=door_id)):
+    if not check_can_open_door(request, Door.objects.get(pk=id)):
 
         if check_location_hint(request):
             messages.error(request, "You are in the wrong location. Consider joining the ZAM Wi-Fi.")
@@ -133,7 +144,7 @@ def open(request, door_id):
 
 
     assert door_commander_mqtt
-    door = Door.objects.get(pk=door_id)
+    door = Door.objects.get(pk=id)
     mqtt_id = door.mqtt_id
 
     door_commander_mqtt.open(mqtt_id, timeout=time.time() + 30)
@@ -143,5 +154,27 @@ def open(request, door_id):
         get_client_ip(request, **IPWARE_KWARGS),
         door,
         door.display_name))
+
+    return redirect(home)
+
+def open_group(request, id):
+    if not request.POST:
+        messages.error(request, "Please try again.")
+        return redirect(home)
+    multiopen_group = MultiOpen.objects.get(pk=id)
+    allowed_doors = []
+    for door in multiopen_group.doors.all():
+        if check_can_open_door(request, door):
+            allowed_doors.append(door)
+    if not allowed_doors:
+        raise PermissionDenied("You are not allowed to open a door in this group")
+
+    for door in allowed_doors:
+        door_commander_mqtt.open(door.mqtt_id, timeout=time.time() + 30)
+        log.warn(ic.format(
+            request.user,
+            get_client_ip(request, **IPWARE_KWARGS),
+            door,
+            door.display_name))
 
     return redirect(home)

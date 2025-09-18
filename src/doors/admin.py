@@ -4,7 +4,7 @@ from django.contrib import admin
 from django.forms import ModelForm
 from django.forms.widgets import TextInput
 
-from doors.models import Door
+from doors.models import Door, MultiOpen
 from doors import door_names_publisher
 
 
@@ -32,3 +32,4 @@ class DoorAdmin(admin.ModelAdmin):
         super(DoorAdmin, self).save_model(request, obj, form, change)
         door_names_publisher.publish_door_name(obj)
 
+admin.site.register(MultiOpen)
