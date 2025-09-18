@@ -27,21 +27,16 @@ PERMITTED_IP_NETWORKS = getattr(settings, 'PERMITTED_IP_NETWORKS', None)
 
 
 def home(request):
-    user_doors = list(door for door in Door.objects.all() if (not door.hidden) and check_can_view_door(request, door))
     user_multiopens = list(mo for mo in MultiOpen.objects.all() if check_can_view_multiopen(request, mo))
     #has_allowed_location, allowed_location_reason = check_has_allowed_location(request)
     doors_status = fetch_status()
-    can_open_doors = {door: check_can_open_door(request, door) for door in user_doors} | {mo: True for mo in user_multiopens}
-    user_actions = user_doors + user_multiopens
-    user_actions.sort(key = lambda a: a.order)
-    actions = {d: "open" for d in user_doors} | {mo: "open_group" for mo in user_multiopens}
-    ic(can_open_doors, user_doors)
+    can_open_doors = {mo: True for mo in user_multiopens}
+    door_buttons = user_multiopens
     context= dict(
         can_open_doors=can_open_doors,
-        doors=user_actions,
+        doors=door_buttons,
         doors_status=doors_status,
         show_location_hint=check_location_hint(request),
-        doors_action=actions,
     )
     return render(request, 'web_homepage/index.html', context=context)
     # return redirect("https://betreiberverein.de/impressum/")
@@ -64,6 +59,7 @@ def check_can_open_door(request, door):
     user_dict = create_request_user_info(request)
     has_permission = get_allowed_result("app/door_commander/physical_access", dict(action="open",user=user_dict,door=create_door_info(door)))
     return has_permission
+
 def check_can_view_door(request, door):
     user_dict = create_request_user_info(request)
     has_permission = get_allowed_result("app/door_commander/physical_access", dict(action="view",user=user_dict,door=create_door_info(door)))
@@ -128,36 +124,7 @@ def get_location_info(request):
         else:
             return dict(status="NO_IP_PRESENT")
 
-
 def open(request, id):
-    if not request.POST:
-        messages.error(request, "Please try again.")
-        return redirect(home)
-
-    if not check_can_open_door(request, Door.objects.get(pk=id)):
-
-        if check_location_hint(request):
-            messages.error(request, "You are in the wrong location. Consider joining the ZAM Wi-Fi.")
-            return redirect(home)
-
-        raise PermissionDenied("You are not allowed to open the door.")
-
-
-    assert door_commander_mqtt
-    door = Door.objects.get(pk=id)
-    mqtt_id = door.mqtt_id
-
-    door_commander_mqtt.open(mqtt_id, timeout=time.time() + 30)
-
-    log.warn(ic.format(
-        request.user,
-        get_client_ip(request, **IPWARE_KWARGS),
-        door,
-        door.display_name))
-
-    return redirect(home)
-
-def open_group(request, id):
     if not request.POST:
         messages.error(request, "Please try again.")
         return redirect(home)

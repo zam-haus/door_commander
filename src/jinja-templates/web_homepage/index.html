@@ -51,7 +51,7 @@
         {% for door in doors %}
 	    {# <!-- {{ door.display_name }} - doorid: {{door.id}}, doormqttid: {{door.mqtt_id}} --> #}
             {% if can_open_doors[door] %}
-                <form action="{{ url(doors_action[door], kwargs=dict(id=door.id)) }}" method="post">
+                <form action="{{ url("open", kwargs=dict(id=door.id)) }}" method="post">
                     {{ csrf_input }}
                     <button type="submit" style="color: {{door.text_color}}; background-color: {{door.button_color}}">
                         {{ door.display_name }} &ouml;ffnen!
