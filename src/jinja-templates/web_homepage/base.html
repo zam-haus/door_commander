@@ -7,19 +7,64 @@
                 rel="shortcut icon" type="image/png"
                 href="https://betreiberverein.de/wp-content/uploads/2020/11/cropped-201120_Foerderverein_LOGO_RGB_ohneText.png"/>
         <title>Se-ZAM öffne dich!</title>
+        <link rel="stylesheet" href="{{ static("web_homepage/bulma.css") }}"/>
+        <script src="{{ static("web_homepage/jquery.min.js") }}"></script>
+        <script src="{{ static("web_homepage/navbar-burger.js") }}"></script>
+        <style>
+            html {
+                font-size: 200%;
+            }
+        </style>
+        {# <link rel="stylesheet" href="{{ static("cards/icons.css") }}"/> #}
     {% endblock %}
 </head>
 <body>
-<center>
-   <svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" align="center" width="50%" viewBox="0 0 512 206.2" style="enable-background:new 0 0 512 206.2;" xml:space="preserve">
-      <path d="M 24.601562 28.298441 L 24.601562 65.700784 L 174.19922 65.700784 L 174.19922 28.298441 L 24.601562 28.298441 z M 234.80078 28.298441 C 214.2008 28.298441 197.39844 45.100805 197.39844 65.700784 L 197.39844 140.50157 C 197.39844 161.10154 214.2008 177.9 234.80078 177.9 C 255.40076 177.9 272.19922 161.10154 272.19922 140.50157 L 234.80078 140.50157 L 234.80078 65.700784 L 272.19922 65.700784 C 272.19922 45.100805 255.40076 28.298441 234.80078 28.298441 z M 272.19922 65.700784 L 272.19922 140.50157 L 272.19922 177.9 L 309.60156 177.9 L 309.60156 28.298441 L 272.19922 28.298441 L 272.19922 65.700784 z M 377.39844 28.298441 C 356.79846 28.298441 340 45.100805 340 65.700784 L 339.80078 65.700784 L 339.80078 103.09922 L 340 103.09922 L 340 177.9 L 377.39844 177.9 L 377.39844 107.00157 C 379.49844 125.70155 395.30158 140.50157 414.60156 140.50157 C 435.20154 140.50157 452 123.6992 452 103.09922 L 452 177.9 L 489.39844 177.9 L 489.39844 65.700784 C 489.39844 45.100805 472.49998 28.298441 452 28.298441 C 432.50002 28.298441 416.00078 43.701585 414.80078 63.001566 C 413.30078 43.701585 396.89842 28.298441 377.39844 28.298441 z M 166.32031 65.900003 L 22.398438 104.29844 L 32.101562 140.50157 L 176.5 101.79844 L 166.72656 65.900003 L 166.32031 65.900003 z M 32.101562 140.50157 L 24.601562 140.50157 L 24.601562 177.9 L 174.19922 177.9 L 174.19922 140.50157 L 32.101562 140.50157 z " />
+{% block logo %}
+    <nav class="navbar" role="navigation" aria-label="main navigation">
+        <div class="navbar-brand">
+            <a class="navbar-item" href="https://bulma.io">
+                <svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg"
+                     xmlns:xlink="http://www.w3.org/1999/xlink"
+                     align="center" width="640px" viewBox="0 0 512 206.2" style="enable-background:new 0 0 512 206.2;"
+                     xml:space="preserve">
+      <path d="M 24.601562 28.298441 L 24.601562 65.700784 L 174.19922 65.700784 L 174.19922 28.298441 L 24.601562 28.298441 z M 234.80078 28.298441 C 214.2008 28.298441 197.39844 45.100805 197.39844 65.700784 L 197.39844 140.50157 C 197.39844 161.10154 214.2008 177.9 234.80078 177.9 C 255.40076 177.9 272.19922 161.10154 272.19922 140.50157 L 234.80078 140.50157 L 234.80078 65.700784 L 272.19922 65.700784 C 272.19922 45.100805 255.40076 28.298441 234.80078 28.298441 z M 272.19922 65.700784 L 272.19922 140.50157 L 272.19922 177.9 L 309.60156 177.9 L 309.60156 28.298441 L 272.19922 28.298441 L 272.19922 65.700784 z M 377.39844 28.298441 C 356.79846 28.298441 340 45.100805 340 65.700784 L 339.80078 65.700784 L 339.80078 103.09922 L 340 103.09922 L 340 177.9 L 377.39844 177.9 L 377.39844 107.00157 C 379.49844 125.70155 395.30158 140.50157 414.60156 140.50157 C 435.20154 140.50157 452 123.6992 452 103.09922 L 452 177.9 L 489.39844 177.9 L 489.39844 65.700784 C 489.39844 45.100805 472.49998 28.298441 452 28.298441 C 432.50002 28.298441 416.00078 43.701585 414.80078 63.001566 C 413.30078 43.701585 396.89842 28.298441 377.39844 28.298441 z M 166.32031 65.900003 L 22.398438 104.29844 L 32.101562 140.50157 L 176.5 101.79844 L 166.72656 65.900003 L 166.32031 65.900003 z M 32.101562 140.50157 L 24.601562 140.50157 L 24.601562 177.9 L 174.19922 177.9 L 174.19922 140.50157 L 32.101562 140.50157 z "/>
    </svg>
-</center>
+
+            </a>
+
+            <a role="button" class="navbar-burger" aria-label="menu" aria-expanded="false"
+               data-target="navbarBasicExample">
+                <span aria-hidden="true"></span>
+                <span aria-hidden="true"></span>
+                <span aria-hidden="true"></span>
+                <span aria-hidden="true"></span>
+            </a>
+        </div>
+
+        <div id="navbarBasicExample" class="navbar-menu">
+            <div class="navbar-start">
+                <a class="navbar-item" href="/">
+                    Home
+                </a>
+                {% if request.user.is_authenticated %}
+                    <a class="navbar-item" href="{{ url('cards-home') }}">
+                            Kartenverwaltung
+                        </a>
+                    {% if request.user.is_staff %}
+                        <a class="navbar-item" href="{{ url('admin:index') }}">
+                            Administration
+                        </a>
+                    {% endif %}
+                {% endif %}
+            </div>
+        </div>
+    </nav>
+{% endblock %}
 <div>
     {% if messages %}
         <ul class="messages">
             {% for message in messages %}
-	        <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+                <li class="notification {{ dict(success="is-success", info="is-info", debug="", error="is-danger", warning="is-warning").get(message.level_tag,"") }}">{{ message }}</li>
             {% endfor %}
         </ul>
     {% endif %}

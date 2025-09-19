@@ -9,11 +9,7 @@ source secrets.env
 
 set -x
 echo "======== Building ========"
-if which podman-compose ; then
-  $COMPOSE build
-else
-  $COMPOSE build --parallel
-fi
+$COMPOSE build
 # recreate the containers with the new password.
 echo "======== Recreating Containers ========"
 $COMPOSE up --no-start --force-recreate

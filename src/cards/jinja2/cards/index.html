@@ -1,0 +1,132 @@
+{% extends "web_homepage/base.html" %}}
+{% block head %}
+    {{ super() }}
+    {# ... #}
+{% endblock %}
+{% block body %}
+    <main>
+        <section class="section">
+            <h1 class="title">Kartenverwaltung</h1>
+            <div class="subtitle">Hier kannst du deine Schließkarten verwalten:</div>
+        </section>
+        <section class="section">
+            <div class="grid is-col-min-14">
+                {% for card in cards %}
+                    {% set n = loop.index %}
+                    {% set locked = card.disabled %}
+                    <div class="cell">
+                        <div class="card">
+                            {#
+                        <div class="card-image">
+                            <figure class="image is-1by1">
+                               <img src="{{ static('cards/fa6-regular--id-card.svg') }}">
+                            </figure>
+                        </div>
+                        #}
+                            <div class="card-content">
+                                <div class="media">
+                                    <div class="media-left">
+                                        <img src="{{ static('cards/fa6-regular--id-card.svg') }}" height="48px"
+                                             width="48px">
+                                    </div>
+                                    <div class="media-content">
+                                        <p class="title is-4">Karte {{ n }}</p>
+                                        {% if locked %} <p class="subtitle is-6">Karte gesperrt!</p> {% endif %}
+                                    </div>
+                                </div>
+
+                                <div class="content">
+                                    <div>ID: {{ card.id }}</div>
+                                    <div>Karte registriert: {{ card.created_at.strftime("%Y-%m-%d") }}</div>
+                                    {# <div>Karte zuletzt
+                                        verwendet: {{ card.last_used_at.strftime("%Y-%m-%d %H:%M") if card.last_used_at else "Noch nicht verwendet" }}</div> #}
+                                    <hr/>
+
+                                    <form method="post" action="{{ url('cards-modify', kwargs={'card_id': card.id}) }}">
+                                        {{ csrf_input }}
+                                        <button type="submit" class="button is-danger" name="action" value="delete">
+                                            Karte löschen
+                                        </button>
+                                        {% if not locked %}
+                                            <button type="submit" class="button is-warning" name="action"
+                                                    value="disable">
+                                                Karte sperren
+                                            </button>
+                                        {% endif %}
+                                    </form>
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+                {% if can_register_card %}
+                    <div class="cell">
+
+                        <div class="card">
+                            <div class="card-content">
+                                <div class="media">
+                                    <div class="media-left">
+                                        <img src="{{ static('cards/fa6-regular--id-card.svg') }}" height="48px"
+                                             width="48px">
+                                    </div>
+                                    <div class="media-content">
+                                        <p class="title is-4">Neue Karte hinzufügen</p>
+                                        <p class="subtitle is-6">oder eigene gesperrte Karte entsperren</p>
+                                    </div>
+                                </div>
+
+                                <div class="content">
+                                    <div>Halte die neue Karte an die Registrierungsstation und klicke danach auf den
+                                        Button:
+                                    </div>
+                                    <hr/>
+                                    <form method="post" action="{{ url("cards-register") }}">
+                                        {{ csrf_input }}
+                                        <button type="submit" class="button is-warning">
+                                            Karte registrieren
+                                        </button>
+                                    </form>
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+                {% endif %}
+                <div class="cell">
+
+                    <div class="card">
+                        <div class="card-content">
+                            <div class="media">
+                                <div class="media-left">
+                                    <img src="{{ static('cards/fa6-regular--id-card.svg') }}" height="48px"
+                                         width="48px">
+                                </div>
+                                <div class="media-content">
+                                    <p class="title is-4">Gefundene Karte sperren</p>
+                                    {# <p class="subtitle is-6">Created: YYYY-DD-MM</p> #}
+                                </div>
+                            </div>
+
+                            <div class="content">
+                                <div>Halte die neue Karte an die Registrierungsstation und klicke danach auf den
+                                    Button:
+                                </div>
+                                <hr/>
+                                <form method="post" action="{{ url("cards-disable-scan") }}">
+                                    {{ csrf_input }}
+                                    <button type="submit" class="button is-warning">
+                                        Karte sperren
+                                    </button>
+                                </form>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+
+    </main>
+{% endblock %}

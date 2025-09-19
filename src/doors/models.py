@@ -1,5 +1,6 @@
 import uuid
 
+import encrypted_fields
 from django.db import models
 
 # Create your models here.
@@ -43,3 +44,17 @@ class MultiOpen(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     display_name = models.TextField()
     doors = models.ManyToManyField(Door)
+
+    def __str__(self):
+        return f"MultiOpen({self.mqtt_id=!r}, {self.display_name=!r})"
+
+class RemoteClient(models.Model):
+    "An MQTT and OPA client running on an RPI"
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    username = models.CharField(max_length=256, unique=True, db_index=True)
+
+    # The OPA bundle server bearer token or the MQTT password
+    token = encrypted_fields.EncryptedCharField(max_length=256)
+
+    doors = models.ManyToManyField(Door, related_name='remote_clients', blank=True)
+    "The list of doors that this client is allowed to update on MQTT"

@@ -8,6 +8,7 @@ services:
   mqtt:
     ports:
       - "127.0.0.1:8082:80" # with nginx SSL reverse proxy
+      - "127.0.0.1:1883:1883"
 
   db:
     ports:
@@ -24,7 +25,63 @@ services:
       - "127.0.0.1:8181:8181"
     environment:
       OPA_DEBUG_MODE: 'unauthenticated'
+      OPA_BUNDLE_SERVER_URL: "http://host.docker.internal:8000/opa-bundles/"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  # This is necessary since volumes are only writable as root by default, but opa runs as 1000:1000.
+  opa-client-prototype-change-volume-uid:
+    image: ubuntu
+    command: "bash -c 'set -eux ; chown -R 1000:1000 /var/opa'"
+    volumes:
+      - opa-client-prototype-persistence:/var/opa/
+
+  # An OPA client configured similar to how it could run on an rpi.
+  opa-client-prototype:
+    command: run --server --addr :8181  --authentication=token --authorization=basic -c /data/config.yaml
+    #command: run --server --addr :8181  --authentication=token --log-level debug -c /data/config.yaml /data/policy
+    environment:
+      OPA_BEARER_TOKEN:
+      OPA_DEBUG_MODE: 'unauthenticated'
+      OPA_BUNDLE_SERVER_BEARER_TOKEN:
+    image: "openpolicyagent/opa:latest"
+    depends_on:
+      - opa-client-prototype-change-volume-uid
+    #  - python
+    #networks:
+    #  - opa
+    ports: # []
+      - "127.0.0.1:8182:8181"
+    volumes:
+      - ./opa-client-prototype/:/data/:ro
+      - opa-client-prototype-persistence:/var/opa/
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  test:
+    image: ubuntu
+
+  openldap:
+    build: ./testing-ldap
+    ports:
+      - "389:389"
+      - "636:636"
+    environment:
+      LDAP_ORGANISATION: "ZAM Betreiberverein"
+      LDAP_DOMAIN: "betreiberverein.de"
+      LDAP_BASE_DN: "dc=betreiberverein,dc=de"
+      # Bind to cn=admin,dc=betreiberverein,dc=de
+      LDAP_ADMIN_PASSWORD: "${LDAP_PASSWORD}"
+    volumes:
+      - ldap-data:/var/lib/ldap
+      - ldap-config:/etc/ldap/slapd.d
+    command: "--loglevel debug"
 
   nginx:
     ports:
       - "127.0.0.1:8080:80"
+
+volumes:
+  opa-client-prototype-persistence:
+  ldap-data:
+  ldap-config:

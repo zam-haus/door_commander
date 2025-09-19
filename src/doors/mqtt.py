@@ -76,6 +76,7 @@ class MqttDoorCommanderEndpoint(GenericMqttEndpoint):
         return self._mqttc.publish(topic, json.dumps(name), qos=2,retain=True)
 
 def start_connection():
+    log.debug(f"Starting MQTT connection {MQTT_SERVER_KWARGS=}, {MQTT_CLIENT_KWARGS=}, {MQTT_TLS=}")
     door_commander_mqtt = MqttDoorCommanderEndpoint(
         client_kwargs=MQTT_CLIENT_KWARGS,
         password_auth=MQTT_PASSWORD_AUTH,

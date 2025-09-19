@@ -16,7 +16,7 @@ from accounts.models import User
 from door_commander.opa import get_allowed_result
 from doors.mqtt import door_commander_mqtt
 from django.conf import settings
-from doors.models import PERMISSION_OPEN_DOOR, Door, MultiOpen
+from doors.models import PERMISSION_OPEN_DOOR, Door
 from clientipaddress.mqtt import wifi_locator_mqtt
 
 log = logging.getLogger(__name__)
@@ -37,6 +37,7 @@ def home(request):
         doors=door_buttons,
         doors_status=doors_status,
         show_location_hint=check_location_hint(request),
+        messages=messages.get_messages(request),
     )
     return render(request, 'web_homepage/index.html', context=context)
     # return redirect("https://betreiberverein.de/impressum/")
@@ -57,17 +58,17 @@ def create_door_info(door):
 
 def check_can_open_door(request, door):
     user_dict = create_request_user_info(request)
-    has_permission = get_allowed_result("app/door_commander/physical_access", dict(action="open",user=user_dict,door=create_door_info(door)))
+    has_permission = get_allowed_result("app/door_commander/sidecar/door_authz", dict(action="open",user=user_dict,door=create_door_info(door)))
     return has_permission
 
 def check_can_view_door(request, door):
     user_dict = create_request_user_info(request)
-    has_permission = get_allowed_result("app/door_commander/physical_access", dict(action="view",user=user_dict,door=create_door_info(door)))
+    has_permission = get_allowed_result("app/door_commander/sidecar/door_authz", dict(action="view",user=user_dict,door=create_door_info(door)))
     return has_permission
 
 def check_location_hint(request):
     user_dict = create_request_user_info(request)
-    has_permission = get_allowed_result("app/door_commander/physical_access", dict(user=user_dict), key="show_location_hint")
+    has_permission = get_allowed_result("app/door_commander/sidecar/door_authz", dict(user=user_dict), key="show_location_hint")
     return has_permission
 
 def check_can_view_multiopen(request, multiopen_group):
@@ -96,7 +97,10 @@ def create_request_user_info(request):
 
 
 def serialize_model(model):
-    return json.loads(serializers.serialize('json', [model, ]))[0]
+    model = json.loads(serializers.serialize('json', [model, ]))[0]
+    if 'fields' in model and "password" in model['fields']:
+        model['fields']['password'] = bool(model['fields']['password'])
+    return model
 
 
 def get_location_info(request):

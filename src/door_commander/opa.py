@@ -1,5 +1,6 @@
 import logging
 import urllib.parse
+from dataclasses import dataclass
 
 import requests
 from icecream import ic
@@ -7,6 +8,29 @@ from django.conf import settings
 
 log = logging.getLogger(__name__)
 
+@dataclass
+class Policy:
+    id:str
+    raw:str
+    def __repr__(self):
+        return f"Policy(id={self.id!r}, raw={self.raw[:100]!r}...)"
+
+def get_polices():
+    try:
+        url = settings.OPA_URL
+        token = settings.OPA_BEARER_TOKEN
+        response = requests.get(url + "/v1/policies", headers=get_auth_header())
+
+        if response.status_code != 200:
+            raise Exception("Querying OPA failed")
+
+        result_wrapper = response.json()
+        result = result_wrapper["result"]
+        policies = [Policy(item["id"], item["raw"]) for item in result]
+        log.debug(f"Loaded policies: {policies}")
+        return policies
+    except Exception as e:
+        raise Exception(f"OPA query failed: {e}")
 
 def get_query_result(query, function):
     """
@@ -29,8 +53,8 @@ def get_query_result(query, function):
 
         result_wrapper = response.json()
         result = result_wrapper["result"]
-    except:
-        raise Exception("Auth check failed")
+    except Exception as e:
+        raise Exception(f"OPA query failed: {e}")
 
 
 def get_auth_header():
@@ -38,10 +62,10 @@ def get_auth_header():
 
 
 def get_allowed_result(path, function, key="allow"):
-    return get_data_result(path, function)[key] is True
+    return get_data_result(path+"/"+key, function) is True
 
 def check_allowed(path, function):
-    if get_data_result(path, function)["allow"] is True:
+    if get_data_result(path+"/allow", function) is True:
         return
     else:
         raise Exception("Unauthorized")  # TODO 401/403
@@ -67,14 +91,14 @@ def get_data_result(path, function):
         response = requests.post(fullurl, json=input, headers=get_auth_header())
 
         if response.status_code != 200:
-            raise Exception("Auth failed")
+            raise Exception("OPA query failed")
 
         result = response.json()
         # log.setLevel(logging.DEBUG)
         log.debug("Return authorization result %s", ic.format(path, input, result))
-        return result['result']
+        return result['result'] if 'result' in result else None
     except Exception as e:
-        raise Exception("Auth check failed")
+        raise Exception(f"OPA query failed: {e}")
 
 
 def create_default_input(function):

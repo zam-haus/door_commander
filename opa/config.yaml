@@ -1,8 +1,45 @@
 #default_decision: /http/example/authz/allow
 
+door_commander:
+  # Additional data to use in the policies via: opa.runtime().door_commander.custom
+  environment: "django"
+  hostname: "opa"
+
 persistence_directory: /var/opa
 
 caching:
   inter_query_builtin_cache:
     max_size_bytes: 10000000
 
+
+services:
+  django:
+    # HTTP is okay inside our docker compose stack
+    # This is the URL to django started by debug.sh on localhost outside the container
+    #   or to the container "python".
+    url: "${OPA_BUNDLE_SERVER_URL}"
+    response_header_timeout_seconds: 5
+    credentials:
+      bearer:
+        token: "${OPA_BEARER_TOKEN}"
+
+bundles:
+  door_authz:
+    service: django
+    resource: bundles/sidecar_authz.tar.gz
+    persist: true
+    polling:
+      min_delay_seconds: 10
+      max_delay_seconds: 20
+
+
+decision_logs:
+  service: django
+  resource: decision-log/opa
+  reporting:
+    min_delay_seconds: 10
+    max_delay_seconds: 20
+
+status:
+  service: django
+  partition_name: opa

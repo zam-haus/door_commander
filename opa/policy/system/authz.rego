@@ -5,9 +5,9 @@ package system.authz
 
 default allow = false  # Reject requests by default.
 
-allow {
+allow if {
     opa.runtime().env.OPA_BEARER_TOKEN == input.identity
 }
-allow {
+allow if {
     opa.runtime()["env"]["OPA_DEBUG_MODE"] == "unauthenticated"
 }

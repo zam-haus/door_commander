@@ -1,4 +1,4 @@
-ARG PYTHON_VERSION=3.10
+ARG PYTHON_VERSION=3.13
 ARG NGINX_VERSION=latest
 FROM python:${PYTHON_VERSION} AS python-dependencies
 
@@ -18,7 +18,7 @@ COPY Pipfile .
 # Otherwise, the venv would reside in /root/.local/share/virtualenvs/
 ENV PIPENV_VENV_IN_PROJECT=1
 # alpine does not support manylinux, and needs to compile psycopg2
-RUN pipenv --python 3.10
+RUN pipenv --python 3.13
 RUN pipenv install --deploy
 
 

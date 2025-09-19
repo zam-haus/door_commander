@@ -10,9 +10,8 @@ services:
     volumes:
       - door-commander-mosquitto-log:/mosquitto/log
       - door-commander-mosquitto-data:/mosquitto/data
-      - ./mosquitto/config/mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
-      - ./mosquitto/config/mosquitto.acl:/mosquitto/config/mosquitto.acl:ro
-      - ./mosquitto/config/mosquitto.passwd:/mosquitto/config/mosquitto.passwd
+      - ./mosquitto/config/:/mosquitto/config/:ro
+      - door-commander-mosquitto-dynconfig:/mosquitto/dyn-config/
     networks:
       - web
       - mqtt
@@ -50,15 +49,27 @@ services:
       &python-environment
       OPA_BEARER_TOKEN: '${OPA_BEARER_TOKEN}'
       OPA_URL: "http://opa:8181/"
+      OPA_BUNDLE_DIRECTORY: "/data/opa-bundle"
+      ALLOWED_HOSTS:
+      LDAP_BASE_DN:
+      LDAP_BIND_DN:
+      LDAP_PASSWORD:
+      LDAP_URL:
+      OIDC_OP_JWKS_ENDPOINT:
       OIDC_RP_CLIENT_ID:
+      OIDC_RP_SIGN_ALGO:
       OIDC_RP_CLIENT_SECRET:
       OIDC_OP_LOGOUT_URL:
       OIDC_OP_USER_ENDPOINT:
       OIDC_OP_AUTHORIZATION_ENDPOINT:
       OIDC_OP_TOKEN_ENDPOINT:
+      OPA_BUNDLE_SERVER_BEARER_TOKEN:
+      DJANGO_SECRET:
+      DJANGO_SALT:
       POSTGRES_PASSWORD: '${POSTGRES_PASSWORD_DJANGO}'
       POSTGRES_USER: '${POSTGRES_USER_DJANGO}'
       POSTGRES_DB: '${POSTGRES_DB_DJANGO}'
+      POSTGRES_HOST: "db"
       MQTT_PASSWD_CONTROLLER:
       MQTT_CONNECTION: '{"host":"mqtt", "port":1883, "keepalive":10}'
       DJANGO_LOGGING:
@@ -99,10 +110,10 @@ services:
       dockerfile: Dockerfile
       target: python-web
       args:
-        PYTHON_VERSION: "3.10"
+        PYTHON_VERSION: "3.13"
     #image: python_image
     volumes:
-      - "door-commander-python-data:/opt/door-commander.betreiberverein.de/data"
+      - "./opa/policy:/data/opa-bundle:ro"
     networks:
       - db
       - opa
@@ -125,13 +136,18 @@ services:
     networks:
       - db
       - opa
-
+  # This is necessary since volumes are only writable as root by default, but opa runs as 1000:1000.
+  opa-change-volume-uid:
+    image: ubuntu
+    command: "bash -c 'set -eux ; chown -R 1000:1000 /var/opa'"
+    volumes:
+      - opa-persistence:/var/opa/
   opa:
-    # TODO =basic
-    command: run --server --addr :8181 --authentication=token --authorization=basic -c /data/config.yaml /data/policy
+    command: run --server --addr :8181 --authentication=token --authorization=basic -c /data/config.yaml
     environment:
       OPA_BEARER_TOKEN: '${OPA_BEARER_TOKEN}'
-    image: "openpolicyagent/opa:0.70.0"
+      OPA_BUNDLE_SERVER_URL: "http://python:8000/opa-bundles/"
+    image: "openpolicyagent/opa:latest"
     networks:
       - opa
     ports: []
@@ -139,7 +155,8 @@ services:
     volumes:
       - ./opa/:/data/:ro
       - opa-persistence:/var/opa/
-
+    depends_on:
+      - opa-change-volume-uid
 
   nginx:
     build:
@@ -147,7 +164,7 @@ services:
       dockerfile: Dockerfile
       target: nginx
       args:
-        PYTHON_VERSION: "3.10"
+        PYTHON_VERSION: "3.13"
         NGINX_VERSION: 1-alpine
     depends_on:
       - python
@@ -189,9 +206,9 @@ networks:
   opa: #
 
 volumes:
-  door-commander-python-data:
   door-commander-postgres:
   door-commander-mosquitto-data:
   door-commander-mosquitto-log:
   celery-beat-schedule:
   opa-persistence:
+  door-commander-mosquitto-dynconfig:

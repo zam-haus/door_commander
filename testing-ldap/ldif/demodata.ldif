@@ -1,0 +1,66 @@
+dn: ou=users,dc=betreiberverein,dc=de
+objectClass: organizationalUnit
+ou: users
+
+dn: ou=groups,dc=betreiberverein,dc=de
+objectClass: organizationalUnit
+ou: groups
+
+dn: uid=user1,ou=users,dc=betreiberverein,dc=de
+cn: Vorname1
+mail: mail1@example.com
+objectclass: inetOrgPerson
+objectclass: organizationalPerson
+sn: Nachname1
+uid: user1
+#structuralobjectclass: inetOrgPerson
+#createtimestamp: 20210101120000Z
+#creatorsname: cn=admin,dc=betreiberverein,dc=de
+#entrycsn: 20000000000000.000000Z#000000#000#000000
+#entrydn: uid=user1,ou=users,dc=betreiberverein,dc=de
+#entryuuid: 08e5c5a4-51e6-11f0-9fe2-0242ac120002
+#hassubordinates: FALSE
+#memberof: cn=zugangsberechtigt,ou=groups,dc=betreiberverein,dc=de
+#memberof: cn=zugangsberechtigt_nord_eg,ou=groups,dc=betreiberverein,dc=de
+#memberof: cn=zugangsberechtigt_nord_ug,ou=groups,dc=betreiberverein,dc=de
+#memberof: cn=mitglied,ou=groups,dc=betreiberverein,dc=de
+#modifiersname: cn=admin,dc=betreiberverein,dc=de
+#modifytimestamp: 20210101120000Z
+#pwdchangedtime: 20210101120000Z
+#subschemasubentry: cn=Subschema
+
+dn: uid=user2,ou=users,dc=betreiberverein,dc=de
+cn: Vorname2
+mail: mail2@example.com
+objectclass: inetOrgPerson
+objectclass: organizationalPerson
+sn: Nachname2
+uid: user2
+
+dn: cn=emptygroup,ou=groups,dc=betreiberverein,dc=de
+cn: emptygroup
+objectclass: groupOfUniqueNames
+uniquemember: cn=empty-membership-placeholder
+
+dn: cn=mitglied,ou=groups,dc=betreiberverein,dc=de
+cn: mitglied
+objectclass: groupOfUniqueNames
+uniquemember: uid=user1,ou=users,dc=betreiberverein,dc=de
+uniquemember: uid=user2,ou=users,dc=betreiberverein,dc=de
+
+dn: cn=zugangsberechtigt_nord_eg,ou=groups,dc=betreiberverein,dc=de
+cn: zugangsberechtigt_nord_eg
+objectclass: groupOfUniqueNames
+uniquemember: uid=user1,ou=users,dc=betreiberverein,dc=de
+uniquemember: uid=user2,ou=users,dc=betreiberverein,dc=de
+
+dn: cn=zugangsberechtigt_nord_ug,ou=groups,dc=betreiberverein,dc=de
+cn: zugangsberechtigt_nord_ug
+objectclass: groupOfUniqueNames
+uniquemember: uid=user1,ou=users,dc=betreiberverein,dc=de
+
+dn: cn=zugangsberechtigt,ou=groups,dc=betreiberverein,dc=de
+cn: zugangsberechtigt
+objectclass: groupOfUniqueNames
+uniquemember: cn=zugangsberechtigt_nord_eg,ou=groups,dc=betreiberverein,dc=de
+uniquemember: cn=zugangsberechtigt_nord_ug,ou=groups,dc=betreiberverein,dc=de

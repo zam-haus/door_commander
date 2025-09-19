@@ -90,6 +90,10 @@ LOGGING = json.loads(_DJANGO_LOGGING) if _DJANGO_LOGGING else {
         'django.db.backends': {
             'level': 'DEBUG',
             'handlers': ['console'],
+        },
+        # Don't show OPA sidecar activity when debugging
+        'opa_bundles.views': {
+            'level': 'DEBUG',
         }
     },
 }
@@ -109,30 +113,16 @@ DEBUG = bool(os.getenv('ACTIVATE_DEBUG_MODE'))
 # this allows to use {% if debug %} in django templates.
 INTERNAL_IPS = ['127.0.0.1', '::1']
 
-SECRET_KEY_FILE = BASE_DIR.joinpath("./data/django-secret-key.json")
-
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
-def load_or_create_secret_key() -> str:
-    # TODO we now pass all secrets via environment, we might want to do this here too.
-    if SECRET_KEY_FILE.exists():
-        secret = json.load(open(SECRET_KEY_FILE, "r"))
-        return secret
-    else:
-        secret = get_random_secret_key()
-        json.dump(secret, open(SECRET_KEY_FILE, "w"))
-        return secret
+SECRET_KEY = os.getenv("DJANGO_SECRET", "")
+if not SECRET_KEY:
+    log.error("Secret key not set")
 
+# https://github.com/jazzband/django-fernet-encrypted-fields
+SALT_KEY = os.getenv("DJANGO_SALT")
 
-SECRET_KEY = load_or_create_secret_key()
-
-ALLOWED_HOSTS = [
-    'localhost',
-    '127.0.0.1',
-    '[::1]',
-    'python',
-    'sesam.zam.haus',
-]
+ALLOWED_HOSTS = json.loads(os.environ.get("ALLOWED_HOSTS", "[]")) or ['localhost','127.0.0.1','[::1]','python']
 
 # ================================================================
 # Framework applications
@@ -224,7 +214,18 @@ WSGI_APPLICATION = 'door_commander.wsgi.application'
 # ================================================================
 
 OPA_BEARER_TOKEN = os.getenv("OPA_BEARER_TOKEN") or ""
+OPA_BUNDLE_SERVER_BEARER_TOKEN = os.getenv("OPA_BUNDLE_SERVER_BEARER_TOKEN") or ""
 OPA_URL = os.getenv("OPA_URL")
+OPA_BUNDLE_DIRECTORY = os.getenv("OPA_BUNDLE_DIRECTORY") or ""
+
+# ================================================================
+# LDAP
+# ================================================================
+
+LDAP_BASE_DN = os.getenv("LDAP_BASE_DN")
+LDAP_BIND_DN = os.getenv("LDAP_BIND_DN")
+LDAP_PASSWORD = os.getenv("LDAP_PASSWORD")
+LDAP_URL = os.getenv("LDAP_URL")
 
 # ================================================================
 # Database
@@ -246,13 +247,15 @@ if not POSTGRES_DB:
 else:
     POSTGRES_PASSWORD = os.getenv("POSTGRES_PASSWORD")
     POSTGRES_USER = os.getenv("POSTGRES_USER")
+    POSTGRES_HOST = os.getenv("POSTGRES_HOST")
+    log.info(f"Using Postgres DB {POSTGRES_DB!r} on Host {POSTGRES_HOST!r}")
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.postgresql_psycopg2',
             'NAME': POSTGRES_DB,
             'USER': POSTGRES_USER,
             'PASSWORD': POSTGRES_PASSWORD,
-            'HOST': 'db',
+            'HOST': POSTGRES_HOST,
         }
     }
 
@@ -356,9 +359,7 @@ AUTH_PASSWORD_VALIDATORS = [
 with atomic_globals:
     # ic(dict(os.environ))
     OIDC_RP_CLIENT_ID = os.environ['OIDC_RP_CLIENT_ID']
-    # TODO configuration option
-    OIDC_OP_JWKS_ENDPOINT = "http://keycloak_bv.nginx_door_commander_external:8080/realms/ZAM/protocol/openid-connect/certs"
-
+    OIDC_OP_JWKS_ENDPOINT = os.environ['OIDC_OP_JWKS_ENDPOINT']
     OIDC_RP_CLIENT_SECRET = os.environ['OIDC_RP_CLIENT_SECRET']
     OIDC_RENEW_ID_TOKEN_EXPIRY_SECONDS = 60 * 15
     OIDC_OP_AUTHORIZATION_ENDPOINT = os.environ['OIDC_OP_AUTHORIZATION_ENDPOINT']
@@ -367,8 +368,7 @@ with atomic_globals:
     OIDC_OP_LOGOUT_URL = os.environ['OIDC_OP_LOGOUT_URL']
     if OIDC_OP_LOGOUT_URL:
         OIDC_OP_LOGOUT_URL_METHOD = 'accounts.auth.provider_logout'
-    # TODO configuration option
-    OIDC_RP_SIGN_ALGO = "RS256"
+    OIDC_RP_SIGN_ALGO = os.environ['OIDC_RP_SIGN_ALGO'] # "RS256"
 if atomic_globals:
     OIDC = True
     INSTALLED_APPS += [
@@ -446,13 +446,18 @@ CELERY_BEAT_SCHEDULE = {
         "task": "doors.tasks.publish_door_names",
         "schedule": crontab(minute="*/15"),
     },
-}
+    "update_mqtt_dynsec": {
+        "task": "doors.tasks.update_mqtt_dynsec",
+        "schedule": crontab(minute="*/15"),
+    },
+} if DEBUG else {}
 
 # ================================================================
 # Our own functional apps
 # ================================================================
 
 INSTALLED_APPS += [
+    'cards',
     'doors',
     'accounts',
     'api',

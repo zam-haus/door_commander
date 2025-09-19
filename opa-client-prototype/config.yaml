@@ -1,0 +1,45 @@
+#default_decision: /http/example/authz/allow
+
+door_commander:
+  # Additional data to use in the policies via: opa.runtime().door_commander.custom
+  environment: "rpi"
+  hostname: "door-controller-schiebetuer"
+
+persistence_directory: /var/opa
+
+caching:
+  inter_query_builtin_cache:
+    max_size_bytes: 10000000
+
+
+services:
+  django:
+    # TODO use HTTPS when implementing this in a real client
+    # HTTP is okay inside our docker compose stack
+    # This is the URL to django started by debug.sh on localhost outside the container.
+    url: http://host.docker.internal:8000/opa-bundles/
+    response_header_timeout_seconds: 5
+    credentials:
+      bearer:
+        token: "${OPA_BUNDLE_SERVER_BEARER_TOKEN}"
+
+bundles:
+  door_authz:
+    service: django
+    resource: bundles/door_authz.tar.gz
+    persist: true
+    polling:
+      min_delay_seconds: 10
+      max_delay_seconds: 20
+
+
+decision_logs:
+  service: django
+  resource: decision-log/door-controller-schiebetuer
+  reporting:
+    min_delay_seconds: 10
+    max_delay_seconds: 20
+
+status:
+  service: django
+  partition_name: door-controller-schiebetuer

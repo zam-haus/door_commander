@@ -24,6 +24,8 @@ graphene-django = "*"
 celery = "*"
 redis = "*"
 lazy-object-proxy = "*"
+django-fernet-encrypted-fields = "*"
+ldap3 = "*"
 
 [dev-packages]
 selenium = "*"

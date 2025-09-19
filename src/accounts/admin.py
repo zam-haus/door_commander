@@ -15,7 +15,7 @@ class UserConnectionInline(admin.StackedInline):
     model = UserConnection
     extra = 0
     can_add = False
-    fields=('directory', 'directory_key', 'latest_directory_data',),
+    fields = ('directory', 'directory_key', 'latest_directory_data'),
     readonly_fields = ('latest_directory_data',)
 
 
@@ -39,7 +39,7 @@ class UserAdmin(BaseUserAdmin):
           }),
     )
     list_display = (
-    'username', 'email', 'display_name', 'full_name', 'is_staff', 'has_usable_password', 'user_directories')
+        'username', 'email', 'display_name', 'full_name', 'is_staff', 'has_usable_password', 'user_directories')
     list_filter = (
         'is_staff', 'is_superuser', 'is_active', 'groups', 'password_last_changed', 'last_login', 'date_joined',
         'connections__directory__name')
@@ -51,11 +51,11 @@ class UserConnectionAdmin(admin.ModelAdmin):
     fieldsets = (
         (None,
          {'fields':
-              ('user', 'directory', 'directory_key', 'latest_directory_data')}),
+              ('user', 'directory', 'directory_key', 'latest_directory_data',)}),
     )
-    list_display = ('user', 'directory', 'directory_key', 'latest_directory_data')
+    list_display = ('user', 'directory', 'directory_key', 'latest_directory_data',)
     list_filter = ('directory__name',)
-    search_fields = ('user', 'directory', 'directory_key', 'latest_directory_data')
+    search_fields = ('user', 'directory', 'directory_key', 'latest_directory_data',)
     readonly_fields = ()
 
 
@@ -79,7 +79,7 @@ class UserDirectoryUsers(UserDirectory):
 class UserConnectionTabularInline(admin.TabularInline):
     model = UserConnection
     extra = 0
-    fields = ('user','directory_key','latest_directory_data')
+    fields = ('user', 'directory_key', 'latest_directory_data',)
     readonly_fields = ()
 
 
@@ -99,4 +99,4 @@ class UserDirectoryUsersAdmin(admin.ModelAdmin):
 admin.site.register(User, UserAdmin)
 admin.site.register(UserDirectory, UserDirectoryAdmin)
 admin.site.register(UserDirectoryUsers, UserDirectoryUsersAdmin)
-#admin.site.register(UserConnection, UserConnectionAdmin)
+# admin.site.register(UserConnection, UserConnectionAdmin)

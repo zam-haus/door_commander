@@ -56,7 +56,7 @@ class UserConnection(models.Model):
     directory_key = models.TextField(null=False,
                                      help_text="This is the unique ID provided by the directory to identify this user")
     latest_directory_data = models.JSONField(null=True, blank=True,
-                                             help_text="This field contains the newest known data about this user. It might be outdated, though.")
+                                             help_text="This field contains the newest known data about this user from the OIDC provider. It might be outdated, though.")
 
     class Meta:
         constraints = [
