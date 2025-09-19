@@ -26,7 +26,7 @@ if [[ ! $MQTT_PASSWD_CONTROLLER ]] ; then
   declare -p MQTT_PASSWD_CONTROLLER >>secrets.env
 fi
 echo "Remove mosquitto/config/dynamic-security.json if you want to reset the admin password to the one written in secrets.env"
-$COMPOSE run --rm mqtt mosquitto_ctrl dynsec init /mosquitto/dyn-config/dynamic-security.json controller "$MQTT_PASSWD_CONTROLLER" || true
+$COMPOSE run -T --rm mqtt mosquitto_ctrl dynsec init /mosquitto/dyn-config/dynamic-security.json controller "$MQTT_PASSWD_CONTROLLER" || true
 echo "Allowing controller to publish messages to normal topics..."
 ./mqtt-dynsec.sh addroleacl admin publishClientSend '#' allow 0 || true
 echo ::endgroup::
@@ -39,7 +39,7 @@ if [[ ! $POSTGRES_PASSWORD ]] ; then
   export POSTGRES_PASSWORD
   declare -p POSTGRES_PASSWORD >>secrets.env
 fi
-$COMPOSE run --rm db /docker-postgres-run-command.sh /update_superuser.sh
+$COMPOSE run -T --rm db /docker-postgres-run-command.sh /update_superuser.sh
 echo ::endgroup::
 
 echo ::group::pgSQL Django Password
@@ -49,7 +49,7 @@ if [[ ! $POSTGRES_PASSWORD_DJANGO ]] ; then
   declare -p POSTGRES_PASSWORD_DJANGO >>secrets.env
 fi
 USER="${POSTGRES_USER_DJANGO}" PASSWORD="${POSTGRES_PASSWORD_DJANGO}" DB="${POSTGRES_DB_DJANGO}" \
-  $COMPOSE run --rm \
+  $COMPOSE run -T --rm \
   -e USER -e PASSWORD -e DB \
   db /docker-postgres-run-command.sh /update_other_user.sh
 echo ::endgroup::
