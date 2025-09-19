@@ -430,7 +430,7 @@ GRAPHENE = {
     'MIDDLEWARE': [
         'graphene_django.debug.DjangoDebugMiddleware',
         # this hides exception messages, except for explicit graphql exceptions:
-        'api.gql.SecurityMiddleware',
+        #'api.gql.SecurityMiddleware',
     ] if DEBUG else [],
 }
 
@@ -450,7 +450,7 @@ CELERY_BEAT_SCHEDULE = {
         "task": "doors.tasks.update_mqtt_dynsec",
         "schedule": crontab(minute="*/15"),
     },
-} if DEBUG else {}
+}
 
 # ================================================================
 # Our own functional apps
