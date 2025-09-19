@@ -46,7 +46,7 @@ class MultiOpen(models.Model):
     doors = models.ManyToManyField(Door)
 
     def __str__(self):
-        return f"MultiOpen({self.mqtt_id=!r}, {self.display_name=!r})"
+        return f"MultiOpen({self.display_name!r})"
 
 class RemoteClient(models.Model):
     "An MQTT and OPA client running on an RPI"

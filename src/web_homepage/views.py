@@ -16,7 +16,7 @@ from accounts.models import User
 from door_commander.opa import get_allowed_result
 from doors.mqtt import door_commander_mqtt
 from django.conf import settings
-from doors.models import PERMISSION_OPEN_DOOR, Door
+from doors.models import MultiOpen, Door
 from clientipaddress.mqtt import wifi_locator_mqtt
 
 log = logging.getLogger(__name__)
