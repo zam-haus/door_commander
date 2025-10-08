@@ -4,8 +4,8 @@ from django.contrib import admin
 from django.forms import ModelForm
 from django.forms.widgets import TextInput
 
+from doors.models import Door, MultiOpen,RemoteClient
 from door_commander.random_passwords import generate_password
-from doors.models import Door, RemoteClient
 from doors import door_names_publisher
 from doors import mqtt_dynsec
 
@@ -57,3 +57,4 @@ class RemoteClientAdmin(admin.ModelAdmin):
         super(RemoteClientAdmin, self).delete_model(request, obj)
         mqtt_dynsec.cleanup_all_clients_and_roles()
 
+admin.site.register(MultiOpen)

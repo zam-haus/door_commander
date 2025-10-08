@@ -1,6 +1,6 @@
 #!/bin/bash
 set -ef -o pipefail
-# set -x
+set -x
 
 set -o allexport; source .env; set +o allexport
 COMPOSE="$COMPOSE -f docker-compose.yml -f docker-compose.prod.yml"
@@ -26,9 +26,12 @@ if [[ ! $MQTT_PASSWD_CONTROLLER ]] ; then
   declare -p MQTT_PASSWD_CONTROLLER >>secrets.env
 fi
 echo "Remove mosquitto/config/dynamic-security.json if you want to reset the admin password to the one written in secrets.env"
+$COMPOSE up -d mqtt
+sleep 1
 $COMPOSE run -T --rm mqtt mosquitto_ctrl dynsec init /mosquitto/dyn-config/dynamic-security.json controller "$MQTT_PASSWD_CONTROLLER" || true
 echo "Allowing controller to publish messages to normal topics..."
 ./mqtt-dynsec.sh addroleacl admin publishClientSend '#' allow 0 || true
+$COMPOSE down
 echo ::endgroup::
 
 

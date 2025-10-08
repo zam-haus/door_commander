@@ -16,7 +16,7 @@ from accounts.models import User
 from door_commander.opa import get_allowed_result
 from doors.mqtt import door_commander_mqtt
 from django.conf import settings
-from doors.models import PERMISSION_OPEN_DOOR, Door
+from doors.models import MultiOpen, Door
 from clientipaddress.mqtt import wifi_locator_mqtt
 
 log = logging.getLogger(__name__)
@@ -27,15 +27,14 @@ PERMITTED_IP_NETWORKS = getattr(settings, 'PERMITTED_IP_NETWORKS', None)
 
 
 def home(request):
-    user_doors = list(door for door in Door.objects.all() if check_can_view_door(request, door))
-    user_doors.sort(key=lambda d: d.order)
+    user_multiopens = list(mo for mo in MultiOpen.objects.all() if check_can_view_multiopen(request, mo))
     #has_allowed_location, allowed_location_reason = check_has_allowed_location(request)
     doors_status = fetch_status()
-    can_open_doors = {door: check_can_open_door(request, door) for door in user_doors}
-    ic(can_open_doors, user_doors)
+    can_open_doors = {mo: True for mo in user_multiopens}
+    door_buttons = user_multiopens
     context= dict(
         can_open_doors=can_open_doors,
-        doors=user_doors,
+        doors=door_buttons,
         doors_status=doors_status,
         show_location_hint=check_location_hint(request),
         messages=messages.get_messages(request),
@@ -61,9 +60,8 @@ def check_can_open_door(request, door):
     user_dict = create_request_user_info(request)
     has_permission = get_allowed_result("app/door_commander/sidecar/door_authz", dict(action="open",user=user_dict,door=create_door_info(door)))
     return has_permission
+
 def check_can_view_door(request, door):
-    if door.registration_terminals.exists():
-        return False
     user_dict = create_request_user_info(request)
     has_permission = get_allowed_result("app/door_commander/sidecar/door_authz", dict(action="view",user=user_dict,door=create_door_info(door)))
     return has_permission
@@ -72,6 +70,13 @@ def check_location_hint(request):
     user_dict = create_request_user_info(request)
     has_permission = get_allowed_result("app/door_commander/sidecar/door_authz", dict(user=user_dict), key="show_location_hint")
     return has_permission
+
+def check_can_view_multiopen(request, multiopen_group):
+    """ a multiopen is visible if at least one door is openable """
+    for door in multiopen_group.doors.all():
+        if check_can_open_door(request, door):
+            return True
+    return False
 
 
 def create_request_user_info(request):
@@ -123,31 +128,24 @@ def get_location_info(request):
         else:
             return dict(status="NO_IP_PRESENT")
 
-
-def open(request, door_id):
+def open(request, id):
     if not request.POST:
         messages.error(request, "Please try again.")
         return redirect(home)
+    multiopen_group = MultiOpen.objects.get(pk=id)
+    allowed_doors = []
+    for door in multiopen_group.doors.all():
+        if check_can_open_door(request, door):
+            allowed_doors.append(door)
+    if not allowed_doors:
+        raise PermissionDenied("You are not allowed to open a door in this group")
 
-    if not check_can_open_door(request, Door.objects.get(pk=door_id)):
-
-        if check_location_hint(request):
-            messages.error(request, "You are in the wrong location. Consider joining the ZAM Wi-Fi.")
-            return redirect(home)
-
-        raise PermissionDenied("You are not allowed to open the door.")
-
-
-    assert door_commander_mqtt
-    door = Door.objects.get(pk=door_id)
-    mqtt_id = door.mqtt_id
-
-    door_commander_mqtt.open(mqtt_id, timeout=time.time() + 30)
-
-    log.warn(ic.format(
-        request.user,
-        get_client_ip(request, **IPWARE_KWARGS),
-        door,
-        door.display_name))
+    for door in allowed_doors:
+        door_commander_mqtt.open(door.mqtt_id, timeout=time.time() + 30)
+        log.warn(ic.format(
+            request.user,
+            get_client_ip(request, **IPWARE_KWARGS),
+            door,
+            door.display_name))
 
     return redirect(home)
