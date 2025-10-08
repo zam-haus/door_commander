@@ -8,9 +8,9 @@ test -f secrets.env
 source secrets.env
 . .env
 
-$COMPOSE build --parallel db
+$COMPOSE build --parallel db 1>&2
 # recreate the containers with the new password.
-$COMPOSE up --no-start --force-recreate db
-$COMPOSE up db -d
+$COMPOSE up --no-start --force-recreate db 1>&2
+$COMPOSE up -d db 1>&2
 sleep 5
 $COMPOSE exec db pg_dump "$POSTGRES_DB_DJANGO" -U user

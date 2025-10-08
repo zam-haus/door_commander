@@ -15,6 +15,21 @@ class Door(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     mqtt_id = models.CharField(max_length=256, unique=True, db_index=True)
     display_name = models.TextField()
+    class Meta:
+        permissions = [
+            (_PERMISSION_OPEN_DOOR, "Can open any door"),
+            (_PERMISSION_LOCATION_OVERRIDE, "Can open doors from anywhere"),
+        ]
+    def __str__(self):
+        return f"Door(display_name={self.display_name},id={self.id})"
+
+class MultiOpen(models.Model):
+    """Elevator or Machine panel, where one open action activates all
+    buttons (Doors) that can be opened by the user"""
+
+
+    class Meta:
+        ordering = ('order',)
     order = models.IntegerField(help_text="Order of appearance for door buttons. Lower is higher up.", default=42)
     text_color = models.CharField(
         max_length=7,
@@ -25,14 +40,13 @@ class Door(models.Model):
         max_length=7,
         default="#60b177",
         help_text="HTML hex color code for button")
-    class Meta:
-        permissions = [
-            (_PERMISSION_OPEN_DOOR, "Can open any door"),
-            (_PERMISSION_LOCATION_OVERRIDE, "Can open doors from anywhere"),
-        ]
-        ordering = ('order',)
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    display_name = models.TextField()
+    doors = models.ManyToManyField(Door)
+
     def __str__(self):
-        return f"Door({self.mqtt_id=!r}, {self.display_name=!r})"
+        return f"MultiOpen({self.display_name!r})"
 
 class RemoteClient(models.Model):
     "An MQTT and OPA client running on an RPI"
