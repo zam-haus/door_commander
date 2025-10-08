@@ -4,11 +4,11 @@
 
 version: "3.4"
 
-networks:
-  web: # nginx <--> django
-    external:
-      name: nginx_door_commander_external
-  inventory_management:
-    external:
-      name: nginx_inventory_management_external
-
+services:
+  mqtt:
+    ports:
+      - "8082:80"
+      - "127.0.0.1:1883:1883"
+  nginx:
+    ports:
+      - "80:80"

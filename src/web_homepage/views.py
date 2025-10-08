@@ -98,8 +98,8 @@ def get_location_info(request):
     else:
         ip = get_client_ip(request, **IPWARE_KWARGS)
         log_ip.debug(ic.format('ip', ip))
-        # log_ip.debug(ic.format(request.META))
-        # log_ip.debug(ic.format(request.headers))
+        log_ip.debug(ic.format(request.META))
+        log_ip.debug(ic.format(request.headers))
         if ip:
             networks = wifi_locator_mqtt.ip_networks
             locator_status = {

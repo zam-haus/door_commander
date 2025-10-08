@@ -16,9 +16,6 @@ services:
     networks:
       - web
       - mqtt
-      - inventory_management
-    ports:
-      - "127.0.0.1:8082:80" # with nginx SSL reverse proxy
     restart: unless-stopped
 
   db:
@@ -36,8 +33,6 @@ services:
     restart: unless-stopped
     volumes:
       - door-commander-postgres:/var/lib/postgresql/data
-    #ports:
-    #  - "127.0.0.1:5432:5432"
     networks:
       - db
 
@@ -125,6 +120,7 @@ services:
     networks:
       - db
       - opa
+    restart: unless-stopped
 
   opa:
     # TODO =basic
@@ -139,6 +135,7 @@ services:
     volumes:
       - ./opa/:/data/:ro
       - opa-persistence:/var/opa/
+    restart: unless-stopped
 
 
   nginx:
@@ -153,6 +150,7 @@ services:
       - python
     networks:
       - web
+      - mqtt
     restart: unless-stopped
 
   redis:
@@ -161,6 +159,7 @@ services:
     image: redis:alpine
     networks:
       - db
+    restart: unless-stopped
 
 
   celery:
@@ -175,17 +174,13 @@ services:
     networks:
       - db
       - mqtt
+    restart: unless-stopped
 
 
 networks:
   mqtt: # mosquitto <--> django
   db: # psql <--> django
   web: # nginx <--> django
-    #external:
-    #  name: nginx_door_commander_external
-  inventory_management:
-    #external:
-    #  name: nginx_inventory_management_external
   opa: #
 
 volumes:
