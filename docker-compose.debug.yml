@@ -44,7 +44,7 @@ services:
       OPA_BEARER_TOKEN:
       OPA_DEBUG_MODE: 'unauthenticated'
       OPA_BUNDLE_SERVER_BEARER_TOKEN:
-    image: "openpolicyagent/opa:latest"
+    image: "docker.io/openpolicyagent/opa:latest"
     depends_on:
       - opa-client-prototype-change-volume-uid
     #  - python

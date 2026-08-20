@@ -6,7 +6,7 @@ version: "3.4"
 services:
 
   mqtt:
-    image: eclipse-mosquitto
+    image: docker.io/eclipse-mosquitto
     volumes:
       - door-commander-mosquitto-log:/mosquitto/log
       - door-commander-mosquitto-data:/mosquitto/data
@@ -26,12 +26,13 @@ services:
       context: ./postgres
       dockerfile: postgres.dockerfile
       args:
-        POSTGRES_VERSION: 14
+        POSTGRES_VERSION: 18
         #POSTGRES_VERSION: latest
     environment:
       - POSTGRES_USER=user
       - POSTGRES_PASSWORD
       - POSTGRES_DB=db
+      - PGDATA=/var/lib/postgresql/data/pgdata
     restart: unless-stopped
     volumes:
       - door-commander-postgres:/var/lib/postgresql/data
@@ -138,7 +139,7 @@ services:
       - opa
   # This is necessary since volumes are only writable as root by default, but opa runs as 1000:1000.
   opa-change-volume-uid:
-    image: ubuntu
+    image: docker.io/ubuntu
     command: "bash -c 'set -eux ; chown -R 1000:1000 /var/opa'"
     volumes:
       - opa-persistence:/var/opa/
@@ -147,7 +148,7 @@ services:
     environment:
       OPA_BEARER_TOKEN: '${OPA_BEARER_TOKEN}'
       OPA_BUNDLE_SERVER_URL: "http://python:8000/opa-bundles/"
-    image: "openpolicyagent/opa:latest"
+    image: "docker.io/openpolicyagent/opa:latest"
     networks:
       - opa
     ports: []
@@ -175,7 +176,7 @@ services:
   redis:
     # this redis has no authentication.
     # NEVER EXPOSE ITS PORTS
-    image: redis:alpine
+    image: docker.io/redis:alpine
     networks:
       - db
 

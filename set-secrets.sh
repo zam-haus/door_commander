@@ -51,9 +51,8 @@ if [[ ! $POSTGRES_PASSWORD_DJANGO ]] ; then
   export POSTGRES_PASSWORD_DJANGO
   declare -p POSTGRES_PASSWORD_DJANGO >>secrets.env
 fi
-USER="${POSTGRES_USER_DJANGO}" PASSWORD="${POSTGRES_PASSWORD_DJANGO}" DB="${POSTGRES_DB_DJANGO}" \
-  $COMPOSE run -T --rm \
-  -e USER -e PASSWORD -e DB \
+$COMPOSE run -T --rm \
+  -e USER="${POSTGRES_USER_DJANGO}" -e PASSWORD="${POSTGRES_PASSWORD_DJANGO}" -e DB="${POSTGRES_DB_DJANGO}" \
   db /docker-postgres-run-command.sh /update_other_user.sh
 echo ::endgroup::
 

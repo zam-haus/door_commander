@@ -50,6 +50,17 @@ psql \
   --set=user="${USER}" \
   -U "${POSTGRES_USER}" "${POSTGRES_DB}" <<-'HEREDOC'
 GRANT ALL PRIVILEGES ON DATABASE  :"db"  TO  :"user" ;
+ALTER DATABASE :"db" OWNER TO :"user";
 ;
 HEREDOC
 echo "Permissions granted, if not already present."
+
+# Postgres 15+ no longer grants CREATE on the public schema to non-owners by
+# default, so the DATABASE-level grant above is not enough to create tables.
+# Connect to the target database itself (not POSTGRES_DB) to fix that up.
+psql \
+  --set=user="${USER}" \
+  -U "${POSTGRES_USER}" "${DB}" <<-'HEREDOC'
+GRANT ALL ON SCHEMA public TO :"user";
+HEREDOC
+echo "Schema permissions granted, if not already present."

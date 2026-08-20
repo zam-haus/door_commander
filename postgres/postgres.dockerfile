@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: MIT
 ARG POSTGRES_VERSION=latest
-FROM postgres:${POSTGRES_VERSION}
+FROM docker.io/postgres:${POSTGRES_VERSION}
 
 # Check the location where we want to insert our hook is actually there.
 #RUN sed '/PostgreSQL Database directory appears to contain a database; Skipping initialization/{q42}' ./docker-entrypoint.sh >/dev/null; \

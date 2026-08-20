@@ -1,6 +1,6 @@
 ARG PYTHON_VERSION=3.13
 ARG NGINX_VERSION=latest
-FROM python:${PYTHON_VERSION} AS python-dependencies
+FROM docker.io/python:${PYTHON_VERSION} AS python-dependencies
 
 #RUN apk add --no-cache openssl
 ENV DOCKERIZE_VERSION v0.6.1
@@ -41,7 +41,7 @@ WORKDIR /opt/static.door-commander.betreiberverein.de/
 
 
 
-FROM nginx:${NGINX_VERSION} as nginx
+FROM docker.io/nginx:${NGINX_VERSION} as nginx
 RUN rm /etc/nginx/conf.d/default.conf
 # Assert there is no other site configured, e.g. after a base image update
 RUN test -n "$(find /etc/nginx/conf.d/ -empty -maxdepth 0)"
