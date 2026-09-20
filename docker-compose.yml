@@ -16,8 +16,7 @@ services:
       - web
       - mqtt
       - inventory_management
-    ports:
-      - "127.0.0.1:8082:80" # with nginx SSL reverse proxy
+    ports: []
     restart: unless-stopped
 
   db:
@@ -26,7 +25,7 @@ services:
       context: ./postgres
       dockerfile: postgres.dockerfile
       args:
-        POSTGRES_VERSION: 14
+        POSTGRES_VERSION: 15
         #POSTGRES_VERSION: latest
     environment:
       - POSTGRES_USER=user
@@ -34,7 +33,7 @@ services:
       - POSTGRES_DB=db
     restart: unless-stopped
     volumes:
-      - door-commander-postgres:/var/lib/postgresql/data
+      - door-commander-postgres2:/var/lib/postgresql/data
     #ports:
     #  - "127.0.0.1:5432:5432"
     networks:
@@ -100,7 +99,8 @@ services:
               "propagate": false
             },
             "web_homepage.views": {"level":"WARN"},
-            "ipware.ip": {"level":"ERROR"}
+            "ipware.ip": {"level":"INFO"},
+            "door_commander.opa": {"level":"INFO"}
           }
         }
         '
@@ -136,6 +136,7 @@ services:
     networks:
       - db
       - opa
+    restart: unless-stopped
   # This is necessary since volumes are only writable as root by default, but opa runs as 1000:1000.
   opa-change-volume-uid:
     image: ubuntu
@@ -157,6 +158,7 @@ services:
       - opa-persistence:/var/opa/
     depends_on:
       - opa-change-volume-uid
+    restart: unless-stopped
 
   nginx:
     build:
@@ -192,6 +194,7 @@ services:
     networks:
       - db
       - mqtt
+    restart: unless-stopped
 
 
 networks:
@@ -207,6 +210,7 @@ networks:
 
 volumes:
   door-commander-postgres:
+  door-commander-postgres2:
   door-commander-mosquitto-data:
   door-commander-mosquitto-log:
   celery-beat-schedule:

@@ -64,8 +64,10 @@
                 {% endif %}
             {% endfor %}
         </div>
-
+	
         <div class="box">
+	(Türstatusazeige funktioniert gerade nicht, deshalb ausgeblendet.)
+	<!--
             <ul>
                 {% for (display_name, status) in doors_status %}
                     <li>
@@ -77,9 +79,10 @@
                         {% else %}
                             ist in einem unbekannten Zustand
                         {% endif %}
-                    </li>
+		    </li>
                 {% endfor %}
-            </ul>
+	    </ul>
+	    --!>
         </div>
 
         {% if request.user.is_authenticated %}

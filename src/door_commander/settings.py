@@ -291,12 +291,14 @@ STATIC_ROOT = os.getenv("COLLECTSTATIC_DIR", None)
 PROXY_HOSTNAME = "nginx"
 try:
     _, _, _nginx_address = socket.gethostbyname_ex(PROXY_HOSTNAME)
+    _, _, _docker_address = socket.gethostbyname_ex("host.docker.internal")
 except socket.gaierror:
     _nginx_address = None
 
 if _nginx_address:
     IPWARE_REVERSE_PROXIES = [
         ReverseProxy(Header("X-Forwarded-For"), *_nginx_address),
+        ReverseProxy(Header("X-Forwarded-For"), *_docker_address),
     ]
 else:
     IPWARE_REVERSE_PROXIES = []
