@@ -16,8 +16,7 @@ services:
       - web
       - mqtt
       - inventory_management
-    ports:
-      - "127.0.0.1:8082:80" # with nginx SSL reverse proxy
+    ports: []
     restart: unless-stopped
 
   db:
@@ -101,7 +100,8 @@ services:
               "propagate": false
             },
             "web_homepage.views": {"level":"WARN"},
-            "ipware.ip": {"level":"ERROR"}
+            "ipware.ip": {"level":"INFO"},
+            "door_commander.opa": {"level":"INFO"}
           }
         }
         '
@@ -137,6 +137,7 @@ services:
     networks:
       - db
       - opa
+    restart: unless-stopped
   # This is necessary since volumes are only writable as root by default, but opa runs as 1000:1000.
   opa-change-volume-uid:
     image: docker.io/ubuntu
@@ -158,6 +159,7 @@ services:
       - opa-persistence:/var/opa/
     depends_on:
       - opa-change-volume-uid
+    restart: unless-stopped
 
   nginx:
     build:
@@ -193,6 +195,7 @@ services:
     networks:
       - db
       - mqtt
+    restart: unless-stopped
 
 
 networks:

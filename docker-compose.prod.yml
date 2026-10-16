@@ -8,4 +8,10 @@ version: "3.4"
 services:
   nginx:
     ports:
-      - "127.0.0.1:8000:80"
+      - "80:80"
+  python:
+    extra_hosts:
+      - "host.docker.internal:192.168.49.1"
+  mqtt:
+    ports:
+      - "8082:80"
